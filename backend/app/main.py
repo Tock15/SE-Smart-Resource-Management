@@ -4,6 +4,7 @@ from app.db.init_db import init_db
 from app.routes.authRoute import router as auth_router
 from app.routes.adminRoute import router as admin_router
 from app.routes.resourceRoute import router as resource_router
+from app.routes.bookingRoute import router as booking_router
 
 
 
@@ -19,6 +20,7 @@ app = FastAPI(lifespan=lifespan)
 app.include_router(auth_router)
 app.include_router(admin_router)
 app.include_router(resource_router)
+app.include_router(booking_router)
 
 @app.get("/")
 def root():
