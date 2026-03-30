@@ -14,7 +14,7 @@ class RegisterState(rx.State):
     token: str = ""
     async def register(self):
         res = requests.post(
-            "http://localhost:8000/register",
+            "http://127.0.0.1:8000/auth/register",
             json={
                 "username": self.username,
                 "email": self.email,
