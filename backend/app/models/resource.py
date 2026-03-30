@@ -1,0 +1,46 @@
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from app.db.base import Base
+from sqlalchemy.sql import func
+
+class Resource(Base):
+    __tablename__ = "resources"
+    resource_id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    description = Column(String)
+    type = Column(String)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    __mapper_args__ = {
+        "polymorphic_identity": "resource",
+        "polymorphic_on": type,
+    }
+
+class CoWorkingSpace(Resource):
+    __tablename__ = "coworking_spaces"
+    resource_id = Column(Integer, ForeignKey("resources.resource_id"), primary_key=True)
+    room_no = Column(String, nullable=False)
+    capacity = Column(Integer, nullable=False)
+
+    __mapper_args__ = {
+        "polymorphic_identity": "coworking_space",
+    }
+
+class Locker(Resource):
+    __tablename__ = "lockers"
+    resource_id = Column(Integer, ForeignKey("resources.resource_id"), primary_key=True)
+    locker_no = Column(String, nullable=False)
+
+    __mapper_args__ = {
+        "polymorphic_identity": "locker",
+    }
+
+class Equipment(Resource):
+    __tablename__ = "equipment"
+    resource_id = Column(Integer, ForeignKey("resources.resource_id"), primary_key=True)
+    serial_no = Column(String, nullable=False)
+
+    __mapper_args__ = {
+        "polymorphic_identity": "equipment",
+    }
+
