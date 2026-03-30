@@ -6,11 +6,11 @@ from typing import Annotated
 
 import jwt
 from app.services.authService import AuthService
-from app.models.user import User
+from app.models.user import Student, Teacher, User, Admin
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from app.db.session import SessionLocal
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY")
@@ -19,8 +19,9 @@ ALGORITHM = "HS256"
 class UserCreate(BaseModel):
     username: str
     email: str
-    student_id: str
+    student_id: str | None = None
     password: str
+    role: str
 
 router = APIRouter(
     prefix="/auth",
@@ -45,12 +46,27 @@ async def register_user(user_in: UserCreate, db: Session = Depends(get_db)):
             detail="A user with this email already exists."
         )
     hashed_password = AuthService.hash_password(user_in.password)
-    new_user = User(
-        username=user_in.username,
-        email=user_in.email,
-        student_id=user_in.student_id,
-        hashed_password= hashed_password
-    )
+    if user_in.role == "student":
+        new_user = Student(
+            username=user_in.username,
+            email=user_in.email,
+            hashed_password=hashed_password,
+            student_id=user_in.student_id  # student-specific field
+        )
+    elif user_in.role == "teacher":
+        new_user = Teacher(
+            username=user_in.username,
+            email=user_in.email,
+            hashed_password=hashed_password
+        )
+    elif user_in.role == "admin":
+        new_user = Admin(
+            username=user_in.username,
+            email=user_in.email,
+            hashed_password=hashed_password
+        )
+    else:
+        raise HTTPException(status_code=400, detail="Invalid role provided.")
 
     db.add(new_user)
     db.commit()
