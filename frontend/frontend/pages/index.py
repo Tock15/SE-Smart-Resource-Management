@@ -1,6 +1,9 @@
 import reflex as rx
 
 
+def sidebar() -> rx.Component:
+    pass
+
 def index() -> rx.Component:
     shared_bg = "url('/room_home.jpg')"
 
@@ -9,11 +12,20 @@ def index() -> rx.Component:
             # Navbar
             rx.box(
                 rx.flex(
-                    rx.text(
-                        "SERSM",
-                        color="black",
-                        font_weight="bold",
-                        font_size="1.5em",
+                    rx.flex(
+                        rx.image(
+                            src="sidebar.png",
+                            width="5%",
+                            height="5%"
+                        ),
+                        rx.text(
+                            "SERSM",
+                            color="black",
+                            font_weight="bold",
+                            font_size="1.5em",
+                        ),
+                        align="center",
+                        spacing="4"
                     ),
                     rx.flex(
                         rx.button("Login",
