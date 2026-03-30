@@ -3,7 +3,7 @@ from typing import Annotated
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from app.db.session import SessionLocal
-from app.models.resource import CoWorkingSpace, Locker, Equipment
+from app.models.resource import CoWorkingSpace, Locker, Equipment, Resource
 from app.models.user import Admin
 from app.routes.authRoute import get_current_user
 
@@ -66,4 +66,36 @@ async def create_resource(resource_in: ResourceCreate, db: Session = Depends(get
     db.refresh(new_resource)
     return {"message": "Resource created successfully", "resource_id": new_resource.resource_id}
 
+@router.put("/resources/{resource_id}")
+async def update_resource(resource_id: int, resource_in: ResourceCreate, db: Session = Depends(get_db), current_user: Admin = Depends(get_current_user)):
+    if not current_user.role == "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only admins can update resources"
+        )
 
+    resource = db.query(Resource).filter(Resource.resource_id == resource_id).first()
+    if not resource:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Resource not found"
+        )
+
+    # Update the resource based on its type
+    if isinstance(resource, CoWorkingSpace):
+        resource.name = resource_in.name
+        resource.description = resource_in.description
+        resource.room_no = resource_in.room_no
+        resource.capacity = resource_in.capacity
+    elif isinstance(resource, Locker):
+        resource.name = resource_in.name
+        resource.description = resource_in.description
+        resource.locker_no = resource_in.locker_no
+    elif isinstance(resource, Equipment):
+        resource.name = resource_in.name
+        resource.description = resource_in.description
+        resource.serial_no = resource_in.serial_no
+
+    db.commit()
+    db.refresh(resource)
+    return {"message": "Resource updated successfully", "resource_id": resource.resource_id}
