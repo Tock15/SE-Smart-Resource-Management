@@ -2,3 +2,7 @@ restart db after changes
 
 docker-compose down -v
 docker-compose up -d
+
+psql terminal for docker
+
+docker exec -it sesrm-db psql -U user -d sesrm
