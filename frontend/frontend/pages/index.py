@@ -47,7 +47,8 @@ def index() -> rx.Component:
                                 font_size="1em",
                                 padding="1.2em",
                                 border_radius="20px",
-                                cursor="pointer"
+                                cursor="pointer",
+                                on_click=rx.redirect("/register")
                             ),
                             spacing="4",
                             align="center",

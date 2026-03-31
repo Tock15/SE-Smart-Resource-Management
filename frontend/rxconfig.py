@@ -7,4 +7,4 @@ config = rx.Config(
         rx.plugins.TailwindV4Plugin(),
     ],
     api_url="http://localhost:8001"
-)
+) 
