@@ -7,6 +7,8 @@ from app.services.bookingService import BookingService
 from pydantic import BaseModel
 from datetime import datetime
 from app.models.booking import BookingStatus
+from typing import List
+
 
 router = APIRouter(prefix="/bookings", tags=["bookings"])
 
@@ -45,6 +47,9 @@ async def request_booking(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    if not current_user.can_book_resource():
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not allowed to book resources")
+    
     new_booking = BookingService.create_booking(
         db=db,
         user_id=current_user.user_id,
@@ -66,3 +71,20 @@ async def get_booking(
     if booking.user_id != current_user.user_id and current_user.role != "admin":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to view this booking")
     return booking
+
+
+
+@router.get("/history", response_model=List[BookingResponse])
+async def get_history(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    is_admin = current_user.role == "admin"
+    
+    history = BookingService.get_booking_history(
+        db=db, 
+        user_id=current_user.user_id, 
+        is_admin=is_admin
+    )
+    return history
+
