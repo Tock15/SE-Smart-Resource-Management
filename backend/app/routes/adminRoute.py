@@ -1,3 +1,5 @@
+from email import message
+
 from fastapi import Depends, HTTPException, status, APIRouter
 from typing import Annotated
 from pydantic import BaseModel
@@ -6,6 +8,7 @@ from app.db.session import SessionLocal
 from app.models.resource import CoWorkingSpace, Locker, Equipment, Resource
 from app.models.user import Admin
 from app.routes.authRoute import get_current_user
+from app.services.resourceService import ResourceService
 
 
 class ResourceCreate(BaseModel):
@@ -37,34 +40,7 @@ async def create_resource(resource_in: ResourceCreate, db: Session = Depends(get
             detail="Only admins can create resources"
         )
     
-    if resource_in.type == "coworking_space":
-        new_resource = CoWorkingSpace(
-            name=resource_in.name,
-            description=resource_in.description,
-            room_no=resource_in.room_no,
-            capacity=resource_in.capacity
-        )
-    elif resource_in.type == "locker":
-        new_resource = Locker(
-            name=resource_in.name,
-            description=resource_in.description,
-            locker_no=resource_in.locker_no
-        )
-    elif resource_in.type == "equipment":
-        new_resource = Equipment(
-            name=resource_in.name,
-            description=resource_in.description,
-            serial_no=resource_in.serial_no
-        )
-    else:
-        raise HTTPException(
-            status_code=400, 
-            detail="Invalid resource type. Must be 'coworking_space', 'locker', or 'equipment'."
-        )
-    db.add(new_resource)
-    db.commit()
-    db.refresh(new_resource)
-    return {"message": "Resource created successfully", "resource_id": new_resource.resource_id}
+    return ResourceService.create_resource(db, resource_in)
 
 @router.put("/resources/{resource_id}")
 async def update_resource(resource_id: int, resource_in: ResourceCreate, db: Session = Depends(get_db), current_user: Admin = Depends(get_current_user)):
@@ -74,28 +50,25 @@ async def update_resource(resource_id: int, resource_in: ResourceCreate, db: Ses
             detail="Only admins can update resources"
         )
 
-    resource = db.query(Resource).filter(Resource.resource_id == resource_id).first()
+    resource = ResourceService.update_resource(db, resource_id, resource_in)
     if not resource:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Resource not found"
         )
-
-    # Update the resource based on its type
-    if isinstance(resource, CoWorkingSpace):
-        resource.name = resource_in.name
-        resource.description = resource_in.description
-        resource.room_no = resource_in.room_no
-        resource.capacity = resource_in.capacity
-    elif isinstance(resource, Locker):
-        resource.name = resource_in.name
-        resource.description = resource_in.description
-        resource.locker_no = resource_in.locker_no
-    elif isinstance(resource, Equipment):
-        resource.name = resource_in.name
-        resource.description = resource_in.description
-        resource.serial_no = resource_in.serial_no
-
-    db.commit()
-    db.refresh(resource)
     return {"message": "Resource updated successfully", "resource_id": resource.resource_id}
+
+@router.delete("/resources/{resource_id}")
+async def delete_resource(
+    resource_id: int, 
+    db: Session = Depends(get_db), 
+    current_user: Admin = Depends(get_current_user)
+):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Admins only")
+    
+    success = ResourceService.delete_resource(db, resource_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Resource not found")
+        
+    return {"message": "Resource deleted successfully"}

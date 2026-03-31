@@ -3,64 +3,15 @@
 import reflex as rx
 
 from rxconfig import config
-from frontend.state import State
+
 import requests
-class LoginState(rx.State):
-    username: str = ""
-    password: str = ""
-    token: str = ""
-    token_type: str = ""
-    error_message: str = ""
 
-    def login_function(self):
-        res = requests.post(
-            "http://localhost:8000/auth/login",
-            data={
-                "username": self.username,
-                "password": self.password,
-            },
-        )
-        if res.status_code == 200:
-            data = res.json()
-            self.token = data["access_token"]
-            State.token = self.token
-            self.token_type = data["token_type"]
-            State.token_type = self.token_type
-            self.error_message = ""
-            
-            return rx.redirect("/")
-        elif res.status_code == 401:
-            self.error_message = "Wrong username or password"
-            print(self.error_message)
-        elif res.status_code == 422:
-            self.error_message = "Invalid input"
-            print(self.error_message)
-        elif res.status_code == 500:
-            self.error_message = "Server error, try again later"
-            print(self.error_message)
-        else:
-            self.error_message = f"Unexpected error: {res.status_code}"
-            print(self.error_message)
-    def getToken(self):
-        return {"token":self.token,"token_type":self.token_type}
-    
 
-def login_page() -> rx.Component:
+def allroom_page() -> rx.Component:
     return rx.center(
     rx.box(
         rx.flex(
             rx.box(
-                rx.link(
-                    rx.hstack(
-                        rx.icon("arrow-left"),
-                        rx.text("Back"),
-                    ),
-                    href="/login",
-                    color="white",
-                    position="absolute",
-                    top="20px",
-                    left="20px",
-                ),
                 rx.center(
                     rx.image(
                         src="/pic/login1.webp",
@@ -87,10 +38,10 @@ def login_page() -> rx.Component:
                         ),
 
                         rx.text("Username",margin="10px 0 5px 20px",font_size="15px"),
-                        rx.input(on_change=LoginState.set_username,value=LoginState.username,placeholder="Username", width="400px",bg="white",margin_bottom="10px",height="45px",border_radius="40px",padding_left="20px",color="black",font_size="17px"),
+                        rx.input(placeholder="Username", width="400px",bg="white",margin_bottom="10px",height="45px",border_radius="40px",padding_left="20px",color="black",font_size="17px"),
                         
                         rx.text("Password",margin="10px 0 5px 20px",font_size="15px"),
-                        rx.input(type="password",on_change=LoginState.set_password,value=LoginState.password,placeholder="Password", width="400px",bg="white",margin_bottom="10px",height="45px",border_radius="40px",padding_left="20px",color="black",font_size="17px"),
+                        rx.input(type="password",placeholder="Password", width="400px",bg="white",margin_bottom="10px",height="45px",border_radius="40px",padding_left="20px",color="black",font_size="17px"),
                         
                         rx.text(
                             "Forget the password?",
@@ -100,14 +51,14 @@ def login_page() -> rx.Component:
                             font_size="15px",
                             cursor="pointer",
                         ),
+
                         rx.button(
                             "Login",
                             width="100%",
                             text_color="white",
                             bg="#1E88E5"
                             ,height="45px",border_radius="40px",padding_left="20px",
-                            on_click=LoginState.login_function,margin_top="30px",
-                            
+                            margin_top="30px"
                         ),
                         
                         rx.hstack(

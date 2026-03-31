@@ -44,6 +44,14 @@ class BookingService:
         db.commit()
         db.refresh(new_booking)
         return new_booking
+    
     @staticmethod
     def get_booking(db: Session, booking_id: int):
         return db.query(Booking).filter(Booking.booking_id == booking_id).first()
+
+    @staticmethod
+    def get_booking_history(db: Session, user_id: int = None, is_admin: bool = False):
+        query = db.query(Booking)
+        if not is_admin:
+            query = query.filter(Booking.user_id == user_id)
+        return query.order_by(Booking.created_at.desc()).all()
