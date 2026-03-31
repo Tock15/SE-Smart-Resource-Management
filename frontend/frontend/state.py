@@ -32,6 +32,15 @@ class State(rx.State):
         self.token = ""
         self.token_type = ""
 
+    def user_authorization(self):
+        if not (self.username != "" and self.token != ""):
+            return rx.redirect("/login")
+    def admin_authorization(self):
+        # print("Role: ", self.role)
+        if not (self.username != "" and self.token != "" and self.role == "admin"):
+            return rx.redirect("/")
+
+
     def verify_token(self):
         if self.token == "":
             return({"message" : "token not found",
