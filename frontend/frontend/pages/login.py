@@ -27,7 +27,6 @@ class LoginState(rx.State):
             self.token_type = data["token_type"]
             State.token_type = self.token_type
             self.error_message = ""
-            
             return rx.redirect("/")
         elif res.status_code == 401:
             self.error_message = "Wrong username or password"
