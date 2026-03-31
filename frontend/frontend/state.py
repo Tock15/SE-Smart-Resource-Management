@@ -1,4 +1,5 @@
 import reflex as rx
-
+import requests
 class State(rx.State):
-    pass
+    token : str = ""
+    token_type : str = ""

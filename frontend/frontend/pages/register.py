@@ -23,22 +23,47 @@ class RegisterState(rx.State):
                 "role": self.role,
             },
         )
-        if res.status_code == 200:
-            self.token = res.json()["access_token"]
+        if res.status_code == 201:
+            data = res.json()
+            print(data)
+            return rx.redirect("/")
+        elif res.status_code == 401:
+            self.error_message = "Wrong username or password"
+            print(self.error_message)
+        elif res.status_code == 422:
+            self.error_message = "Invalid input"
+            print(self.error_message)
+        elif res.status_code == 500:
+            self.error_message = "Server error, try again later"
+            print(self.error_message)
+        else:
+            self.error_message = f"Unexpected error: {res.status_code}"
+            print(self.error_message)
         
 def register_page() -> rx.Component:
     return rx.center(
     rx.box(
         rx.flex(
             rx.box(
+                rx.link(
+                    rx.hstack(
+                        rx.icon("arrow-left"),
+                        rx.text("Back"),
+                    ),
+                    href="/login",
+                    color="white",
+                    position="absolute",
+                    top="20px",
+                    left="20px",
+                ),
                 rx.center(
                     rx.vstack(
                         rx.heading(
                             "Create an Account",
                             width="100%",
                             text_align="center",
-                            margin_bottom="20px"
-                        ),
+                            margin_bottom="20px",
+                        ),  
                         rx.text("Student_ID",margin="5px 0 5px 20px",font_size="15px"),
                         rx.input(value=RegisterState.student_id,on_change=RegisterState.set_student_id,placeholder="Username", width="400px",bg="white",margin_bottom="5px",height="45px",border_radius="40px",padding_left="20px",color="black",font_size="17px"),
 
@@ -91,7 +116,7 @@ def register_page() -> rx.Component:
                 width="300px",
                 height="100%",
                 overflow="hidden",
-                border_radius="60px"
+                border_radius="40px"
             ),   # space between boxes
             width="100%",
             height="100%",
@@ -101,7 +126,7 @@ def register_page() -> rx.Component:
         height="675px",
         padding="20px",
         border_radius="60px",
-        bg="linear-gradient(to bottom, #4facfe, #00f2fe)"
+        bg="linear-gradient(to top,#C8DDF7, #ADD2F7, #7FB6F5)"
     ),
     height="100vh",
     bg="gray"
