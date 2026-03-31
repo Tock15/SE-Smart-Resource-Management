@@ -50,7 +50,7 @@ def register_page() -> rx.Component:
                         rx.icon("arrow-left"),
                         rx.text("Back"),
                     ),
-                    href="/login",
+                    href="/",
                     color="white",
                     position="absolute",
                     top="20px",

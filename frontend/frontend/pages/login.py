@@ -27,7 +27,6 @@ class LoginState(rx.State):
             self.token_type = data["token_type"]
             State.token_type = self.token_type
             self.error_message = ""
-            
             return rx.redirect("/")
         elif res.status_code == 401:
             self.error_message = "Wrong username or password"
@@ -55,7 +54,7 @@ def login_page() -> rx.Component:
                         rx.icon("arrow-left"),
                         rx.text("Back"),
                     ),
-                    href="/login",
+                    href="/",
                     color="white",
                     position="absolute",
                     top="20px",
