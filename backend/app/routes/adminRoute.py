@@ -1,14 +1,19 @@
 from email import message
 
 from fastapi import Depends, HTTPException, status, APIRouter
-from typing import Annotated
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from app.db.session import SessionLocal
-from app.models.resource import CoWorkingSpace, Locker, Equipment, Resource
 from app.models.user import Admin
 from app.routes.authRoute import get_current_user
 from app.services.resourceService import ResourceService
+from app.services.bookingService import BookingService
+from app.models.booking import BookingStatus
+from app.services.notificationService import NotificationService
+from app.routes.bookingRoute import BookingResponse
+from typing import List
+
+
 
 
 class ResourceCreate(BaseModel):
@@ -19,6 +24,8 @@ class ResourceCreate(BaseModel):
     capacity: int | None = None
     locker_no: str | None = None
     serial_no: str | None = None
+
+
 
 router = APIRouter(
     prefix="/admin",
@@ -72,3 +79,62 @@ async def delete_resource(
         raise HTTPException(status_code=404, detail="Resource not found")
         
     return {"message": "Resource deleted successfully"}
+# app/routes/adminRoute.py additions
+
+@router.put("/bookings/{booking_id}/approve")
+async def approve_booking(
+    booking_id: int, 
+    db: Session = Depends(get_db), 
+    current_user: Admin = Depends(get_current_user)
+):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Admins only")
+    
+    booking = BookingService.update_booking_status(db, booking_id, BookingStatus.APPROVED)
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    
+    # TODO: Trigger Notification here
+    NotificationService.send_approval_email(booking.user.email, booking.resource.name)
+    return {"message": "Booking approved", "booking_id": booking_id}
+
+@router.put("/bookings/{booking_id}/reject")
+async def reject_booking(
+    booking_id: int, 
+    db: Session = Depends(get_db), 
+    current_user: Admin = Depends(get_current_user)
+):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Admins only")
+    
+    booking = BookingService.update_booking_status(db, booking_id, BookingStatus.REJECTED)
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+        
+    # TODO: Trigger Notification here
+    NotificationService.send_rejection_email(booking.user.email, booking.resource.name)
+    return {"message": "Booking rejected", "booking_id": booking_id}
+
+
+
+
+@router.get("/users/{user_id}/bookings", response_model=List[BookingResponse])
+async def get_user_booking_history(
+    user_id: int, 
+    db: Session = Depends(get_db), 
+    current_user: Admin = Depends(get_current_user)
+):
+    # Strict admin check
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, 
+            detail="Only admins can view specific user histories"
+        )
+    
+    
+    history = BookingService.get_booking_history(db, user_id=user_id, is_admin=True)
+    
+    if not history:
+        return []
+        
+    return history

@@ -1,6 +1,6 @@
 
 from datetime import datetime
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import and_, or_
 from app.models.booking import Booking, Timeslot, BookingStatus
 from fastapi import HTTPException, status
@@ -51,7 +51,22 @@ class BookingService:
 
     @staticmethod
     def get_booking_history(db: Session, user_id: int = None, is_admin: bool = False):
-        query = db.query(Booking)
-        if not is_admin:
-            query = query.filter(Booking.user_id == user_id)
+        query = db.query(Booking).options(joinedload(Booking.timeslot))
+        
+        if is_admin:
+            if user_id:
+                query = query.filter(Booking.user_id == user_id)
+            else:
+                query = query.filter(Booking.user_id == user_id)
+            
         return query.order_by(Booking.created_at.desc()).all()
+    @staticmethod
+    def update_booking_status(db: Session, booking_id: int, status: BookingStatus):
+        booking = db.query(Booking).filter(Booking.booking_id == booking_id).first()
+        if not booking:
+            return None
+        
+        booking.status = status
+        db.commit()
+        db.refresh(booking)
+        return booking

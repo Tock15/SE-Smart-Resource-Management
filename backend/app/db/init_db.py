@@ -33,7 +33,7 @@ def init_db():
             )
             db.add(new_student)
         else:
-            print("Student already exists, skipping...")
+            print("Student1already exists, skipping...")
 
         # 3. Seed Co-Working Space
         space_exists = db.query(resource.CoWorkingSpace).filter_by(room_no="402").first()
@@ -47,6 +47,8 @@ def init_db():
                 capacity=10
             )
             db.add(new_space)
+        else:
+            print("Co-Working Space 402 already exists, skipping...")
         space_exists2= db.query(resource.CoWorkingSpace).filter_by(room_no="806").first()
         if not space_exists:
             print("Seeding Co-Working Space...")
@@ -58,6 +60,8 @@ def init_db():
                 capacity=8
             )
             db.add(new_space)
+        else:
+            print("Co-Working Space 806 already exists, skipping...")
         # 4. Seed Locker
         locker_exists = db.query(resource.Locker).filter_by(locker_no="L-101").first()
         if not locker_exists:
@@ -68,6 +72,8 @@ def init_db():
                 locker_no="L-101"
             )
             db.add(new_locker)
+        else:
+            print("Locker L-101 already exists, skipping...")
 
         db.commit()
         print("Database seeded successfully!")

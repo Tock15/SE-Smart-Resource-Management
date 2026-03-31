@@ -59,6 +59,22 @@ async def request_booking(
     )
     return new_booking
 
+
+@router.get("/", response_model=List[BookingResponse])
+async def get_history(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    is_admin = False
+
+    history = BookingService.get_booking_history(
+        db=db, 
+        user_id=current_user.user_id, 
+        is_admin=is_admin
+    )
+    return history
+
+
 @router.get("/{booking_id}", response_model=BookingResponse)
 async def get_booking(
     booking_id: int, 
@@ -72,19 +88,4 @@ async def get_booking(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to view this booking")
     return booking
 
-
-
-@router.get("/history", response_model=List[BookingResponse])
-async def get_history(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    is_admin = current_user.role == "admin"
-    
-    history = BookingService.get_booking_history(
-        db=db, 
-        user_id=current_user.user_id, 
-        is_admin=is_admin
-    )
-    return history
 
