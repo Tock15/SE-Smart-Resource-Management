@@ -3,7 +3,9 @@
 import reflex as rx
 
 from rxconfig import config
+from .login import LoginState
 import requests
+from frontend.state import State
 
 class RegisterState(rx.State):
     username: str = ""
@@ -12,6 +14,45 @@ class RegisterState(rx.State):
     password: str = ""
     role: str = "student"
     token: str = ""
+    token_type : str = ""
+    error_message : str = ""
+
+    async def login_function(self, username, password):
+        res = requests.post(
+            "http://localhost:8000/auth/login",
+            data={
+                "username": username,
+                "password": password,
+            },
+        )
+        if res.status_code == 200:
+            data = res.json()
+            self.token = data["access_token"]
+            self.token_type = data["token_type"]
+            self.error_message = ""
+
+            home_state = await self.get_state(State)
+            home_state.set_user_data(
+                username=self.username,
+                role=self.role,
+                token=self.token,
+                token_type=self.token_type,
+            )
+
+            return rx.redirect("/")
+        elif res.status_code == 401:
+            self.error_message = "Wrong username or password"
+            print(self.error_message)
+        elif res.status_code == 422:
+            self.error_message = "Invalid input"
+            print(self.error_message)
+        elif res.status_code == 500:
+            self.error_message = "Server error, try again later"
+            print(self.error_message)
+        else:
+            self.error_message = f"Unexpected error: {res.status_code}"
+            print(self.error_message)
+
     async def register(self):
         res = requests.post(
             "http://127.0.0.1:8000/auth/register",
@@ -25,8 +66,7 @@ class RegisterState(rx.State):
         )
         if res.status_code == 201:
             data = res.json()
-            print(data)
-            return rx.redirect("/")
+            return await self.login_function(self.username, self.password)
         elif res.status_code == 401:
             self.error_message = "Wrong username or password"
             print(self.error_message)
