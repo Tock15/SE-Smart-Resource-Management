@@ -1,14 +1,13 @@
 import reflex as rx
 
+from frontend.state import State
 from .sidebar import SidebarState, sidebar
-
 
 def index() -> rx.Component:
     shared_bg = "url('/room_home.jpg')"
 
     return rx.flex(
         sidebar(),
-
         # main content must grow
         rx.flex(
             rx.box(
@@ -32,27 +31,36 @@ def index() -> rx.Component:
                             align="center",
                             spacing="4",
                         ),
-                        rx.flex(
-                            rx.button(
-                                "Login",
+                        rx.cond(
+                            State.username != "",
+                            rx.text(
+                                State.username,
                                 color="black",
-                                background_color="rgba(255, 255, 255, 0)",
-                                font_size="1em",
-                                cursor="pointer",
-                                on_click=rx.redirect("/login")
+                                font_weight="bold",
+                                font_size="1.3em"
                             ),
-                            rx.button(
-                                "Signup",
-                                color="white",
-                                background_color="rgba(0, 0, 0, 1)",
-                                font_size="1em",
-                                padding="1.2em",
-                                border_radius="20px",
-                                cursor="pointer",
-                                on_click=rx.redirect("/register")
-                            ),
-                            spacing="4",
-                            align="center",
+                            rx.flex(
+                                rx.button(
+                                    "Login",
+                                    color="black",
+                                    background_color="rgba(255, 255, 255, 0)",
+                                    font_size="1em",
+                                    cursor="pointer",
+                                    on_click=rx.redirect("/login")
+                                ),
+                                rx.button(
+                                    "Signup",
+                                    color="white",
+                                    background_color="rgba(0, 0, 0, 1)",
+                                    font_size="1em",
+                                    padding="1.2em",
+                                    border_radius="20px",
+                                    cursor="pointer",
+                                    on_click=rx.redirect("/register")
+                                ),
+                                spacing="4",
+                                align="center",
+                            )
                         ),
                         justify="between",
                         align="center",

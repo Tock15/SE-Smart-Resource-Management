@@ -1,5 +1,5 @@
 import reflex as rx
-
+from frontend.state import State
 
 class SidebarState(rx.State):
     sidebar_opening: bool = False
@@ -10,8 +10,13 @@ class SidebarState(rx.State):
     def open_sidebar(self):
         self.sidebar_opening = True
 
-
+    async def logout(self):
+        home_state = await self.get_state(State)
+        home_state.logout()
+        self.close_sidebar()
+        return rx.redirect("/")
 def sidebar() -> rx.Component:
+
     return rx.box(
         # dark overlay
         rx.box(
@@ -107,12 +112,13 @@ def sidebar() -> rx.Component:
                     rx.text(
                         "Logout",
                         color="black",
-                        font_size="1.3em"
+                        font_size="1.3em",
                     ),
                     width="100%",
                     spacing="3",
                     align="center",
-                    cursor="pointer"
+                    cursor="pointer",
+                    on_click=SidebarState.logout
                 ),
                 direction="column",
                 spacing="4",

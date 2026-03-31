@@ -10,9 +10,10 @@ class LoginState(rx.State):
     password: str = ""
     token: str = ""
     token_type: str = ""
+    role: str = "student"
     error_message: str = ""
 
-    def login_function(self):
+    async def login_function(self):
         res = requests.post(
             "http://localhost:8000/auth/login",
             data={
@@ -23,10 +24,17 @@ class LoginState(rx.State):
         if res.status_code == 200:
             data = res.json()
             self.token = data["access_token"]
-            State.token = self.token
             self.token_type = data["token_type"]
-            State.token_type = self.token_type
             self.error_message = ""
+
+            home_state = await self.get_state(State)
+            home_state.set_user_data(
+                username=self.username,
+                role=self.role,
+                token=self.token,
+                token_type=self.token_type,
+            )
+
             return rx.redirect("/")
         elif res.status_code == 401:
             self.error_message = "Wrong username or password"
