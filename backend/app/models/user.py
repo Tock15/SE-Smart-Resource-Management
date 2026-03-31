@@ -1,17 +1,12 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from app.db.base import Base
 from sqlalchemy.sql import func
-from passlib.context import CryptContext
 
-
-
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 class User(Base):
     __tablename__ = "users"
     user_id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, nullable=False)
+    username = Column(String, unique=True, nullable=False)
     email = Column(String, unique=True, nullable=False)
     hashed_password = Column(String, nullable=False)
     role = Column(String) 
@@ -21,6 +16,8 @@ class User(Base):
         "polymorphic_identity": "user",
         "polymorphic_on": role,
     }
+    def can_book_resource(self):
+        return self.role in ["student", "teacher"]
 
 class Student(User):
     __tablename__ = "students"

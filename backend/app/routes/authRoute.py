@@ -39,53 +39,16 @@ def get_db():
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 async def register_user(user_in: UserCreate, db: Session = Depends(get_db)):
-    existing_user = db.query(User).filter(User.email == user_in.email).first()
-    if existing_user:
-        raise HTTPException(
-            status_code=400, 
-            detail="A user with this email already exists."
-        )
-    hashed_password = AuthService.hash_password(user_in.password)
-    if user_in.role == "student":
-        new_user = Student(
-            username=user_in.username,
-            email=user_in.email,
-            hashed_password=hashed_password,
-            student_id=user_in.student_id  # student-specific field
-        )
-    elif user_in.role == "teacher":
-        new_user = Teacher(
-            username=user_in.username,
-            email=user_in.email,
-            hashed_password=hashed_password
-        )
-    elif user_in.role == "admin":
-        new_user = Admin(
-            username=user_in.username,
-            email=user_in.email,
-            hashed_password=hashed_password
-        )
-    else:
-        raise HTTPException(status_code=400, detail="Invalid role provided.")
-
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-
-    return {"message": "User registered successfully", "user_id": new_user.user_id}
+    new_user = AuthService.register_user(db, user_in)
+    
+    return {
+        "message": "User registered successfully", 
+        "user_id": new_user.user_id
+    }
 
 @router.post("/login")
 async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.username == form_data.username).first()
-
-    if not user or not AuthService.verify_password(user.hashed_password, form_data.password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid username or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    token = AuthService.create_access_token(user.username, user.user_id,timedelta(minutes=60))
-    return {"access_token": token, "token_type": "bearer"}
+    return AuthService.authenticate_user(db, form_data.username, form_data.password)
 
 async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)], db: Session = Depends(get_db)):
     try:
