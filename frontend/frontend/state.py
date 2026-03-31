@@ -25,6 +25,7 @@ class State(rx.State):
             self.token = token
         if token_type is not None:
             self.token_type = token_type
+        print(self.username, self.role)
     def logout(self):
         self.username = ""
         self.role = ""
@@ -32,18 +33,18 @@ class State(rx.State):
         self.token_type = ""
 
     def verify_token(self):
-        if not self.token:
-            return({"message:" : "token not found",
+        if self.token == "":
+            return({"message" : "token not found",
                    "status" : "ERROR"})
 
         try:
             decoded = jwt.decode(self.token, SECRET_KEY, algorithms=["HS256"])
-            return({"message:" : decoded,
+            return({"message" : decoded,
                    "status" : "OK"})
         except jwt.ExpiredSignatureError:
-            return({"message:" : "Token expired",
+            return({"message" : "Token expired",
                    "status" : "ERROR"})
         except jwt.InvalidTokenError:
-            return({"message:" : "Invalid token",
+            return({"message" : "Invalid token",
                    "status" : "ERROR"})
 

@@ -102,6 +102,54 @@ def sidebar() -> rx.Component:
                     align="center",
                     cursor="pointer"
                 ),
+                rx.cond(
+                    State.role == "admin",
+                    rx.divider()
+                ),
+                rx.cond(
+                    State.role == "admin",
+                    rx.flex(
+                        rx.image(
+                            src="sidebar_square-plus.png",
+                            width="10%",
+                            height="10%"
+                        ),
+                        rx.text(
+                            "Add resource",
+                            color="black",
+                            font_size="1.3em",
+                        ),
+                        width="100%",
+                        spacing="3",
+                        align="center",
+                        cursor="pointer",
+                        on_click=SidebarState.logout
+                    ),
+                ),
+                rx.cond(
+                    State.role == "admin",
+                    rx.divider()
+                ),
+                rx.cond(
+                    State.role == "admin",
+                    rx.flex(
+                        rx.image(
+                            src="sidebar_search.png",
+                            width="10%",
+                            height="10%"
+                        ),
+                        rx.text(
+                            "Requests",
+                            color="black",
+                            font_size="1.3em",
+                        ),
+                        width="100%",
+                        spacing="3",
+                        align="center",
+                        cursor="pointer",
+                        on_click=SidebarState.logout
+                    ),
+                ),
                 rx.divider(),
                 rx.flex(
                     rx.image(
