@@ -38,7 +38,8 @@ def index() -> rx.Component:
                                 color="black",
                                 background_color="rgba(255, 255, 255, 0)",
                                 font_size="1em",
-                                cursor="pointer"
+                                cursor="pointer",
+                                on_click=rx.redirect("/login")
                             ),
                             rx.button(
                                 "Signup",
