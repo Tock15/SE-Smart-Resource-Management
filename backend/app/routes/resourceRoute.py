@@ -10,7 +10,7 @@ from app.routes.authRoute import get_current_user
 class viewResource(BaseModel):
     resource_id: int
     name: str
-    description: str
+    description: str | None = None
     type: str
     room_no: str | None = None
     capacity: int | None = None
