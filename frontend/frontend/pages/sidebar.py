@@ -54,7 +54,7 @@ def sidebar() -> rx.Component:
                 ),
                 rx.flex(
                     rx.image(
-                        src="sidebar_house-chimney.png",
+                        src="/sidebar_house-chimney.png",
                         width="10%",
                         height="10%"
                     ),
@@ -72,7 +72,7 @@ def sidebar() -> rx.Component:
                 rx.divider(),
                 rx.flex(
                     rx.image(
-                        src="sidebar_user.png",
+                        src="/sidebar_user.png",
                         width="10%",
                         height="10%"
                     ),
@@ -92,7 +92,7 @@ def sidebar() -> rx.Component:
                     State.role == "admin",
                     rx.flex(
                         rx.image(
-                            src="sidebar_square-plus.png",
+                            src="/sidebar_square-plus.png",
                             width="10%",
                             height="10%"
                         ),
@@ -109,7 +109,7 @@ def sidebar() -> rx.Component:
                     ),
                     rx.flex(
                         rx.image(
-                            src="sidebar_book-alt.png",
+                            src="/sidebar_book-alt.png",
                             width="10%",
                             height="10%"
                         ),
@@ -133,7 +133,7 @@ def sidebar() -> rx.Component:
                     State.role == "admin",
                     rx.flex(
                         rx.image(
-                            src="sidebar_search.png",
+                            src="/sidebar_search.png",
                             width="10%",
                             height="10%"
                         ),
@@ -152,7 +152,7 @@ def sidebar() -> rx.Component:
                 rx.divider(),
                 rx.flex(
                     rx.image(
-                        src="sidebar_leave.png",
+                        src="/sidebar_leave.png",
                         width="10%",
                         height="10%"
                     ),

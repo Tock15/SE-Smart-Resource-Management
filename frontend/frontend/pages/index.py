@@ -16,7 +16,7 @@ def index() -> rx.Component:
                     rx.flex(
                         rx.flex(
                             rx.image(
-                                src="sidebar.png",
+                                src="/sidebar.png",
                                 width="28px",
                                 height="28px",
                                 cursor="pointer",

@@ -33,12 +33,16 @@ class State(rx.State):
         self.token_type = ""
 
     def user_authorization(self):
-        if not (self.username != "" and self.token != ""):
+        if not self.user_check():
             return rx.redirect("/login")
     def admin_authorization(self):
         # print("Role: ", self.role)
-        if not (self.username != "" and self.token != "" and self.role == "admin"):
+        if not self.admin_check():
             return rx.redirect("/")
+    def admin_check(self):
+        return (self.username != "" and self.token != "")
+    def user_check(self):
+        return (self.username != "" and self.token != "" and self.role == "admin")
 
 
     def verify_token(self):
