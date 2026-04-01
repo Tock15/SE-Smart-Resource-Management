@@ -49,7 +49,6 @@ class State(rx.State):
         if self.token == "":
             return({"message" : "token not found",
                    "status" : "ERROR"})
-
         try:
             decoded = jwt.decode(self.token, SECRET_KEY, algorithms=["HS256"])
             return({"message" : decoded,
