@@ -14,6 +14,7 @@ class viewResource(BaseModel):
     type: str
     room_no: str | None = None
     capacity: int | None = None
+    min_guests: int | None = None
     locker_no: str | None = None
     serial_no: str | None = None
 
