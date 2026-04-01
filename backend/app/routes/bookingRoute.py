@@ -13,8 +13,23 @@ from typing import List
 router = APIRouter(prefix="/bookings", tags=["bookings"])
 
 class TimeslotResponse(BaseModel):
+    timeslot_id: int
     start_time: datetime
     end_time: datetime
+
+    class Config:
+        from_attributes = True
+class ResourceResponse(BaseModel):
+    resource_id: int
+    name: str
+    
+    class Config:
+        from_attributes = True
+
+class UserResponse(BaseModel):
+    user_id: int
+    username: str
+    student_id: str
 
     class Config:
         from_attributes = True
@@ -23,15 +38,15 @@ class BookingCreate(BaseModel):
     resource_id: int
     start_time: datetime
     end_time: datetime
+    guests: List[int] = []
 
 class BookingResponse(BaseModel):
     booking_id: int
     status: BookingStatus
-    resource_id: int
-    user_id: int
     timeslot: TimeslotResponse
-
-
+    resource: ResourceResponse
+    user: UserResponse
+    guests: List[UserResponse] = []
 
     class Config:
         from_attributes = True
