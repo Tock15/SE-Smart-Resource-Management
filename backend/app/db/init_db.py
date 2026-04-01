@@ -1,6 +1,6 @@
 from app.db.base import Base
 from app.db.session import SessionLocal, engine
-from app.models import user, resource
+from app.models import user, resource, booking
 from app.services.authService import AuthService
 
 def init_db():
@@ -74,6 +74,23 @@ def init_db():
             db.add(new_locker)
         else:
             print("Locker L-101 already exists, skipping...")
+        
+        # 5. Seed Booking
+        booking_exists = db.query(booking.Booking).first()
+        if not booking_exists:
+            print("Seeding Booking...")
+            timeslot = booking.Timeslot(
+                start_time="2024-07-01 10:00:00",
+                end_time="2024-07-01 12:00:00")
+            new_booking = booking.Booking(
+                user_id=2,
+                resource_id=1,
+                timeslot=timeslot
+            )
+            db.add(new_booking)
+        else:
+            print("Booking already exists, skipping...")
+        
 
         db.commit()
         print("Database seeded successfully!")
