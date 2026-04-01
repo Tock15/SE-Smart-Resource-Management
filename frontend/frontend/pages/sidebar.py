@@ -54,7 +54,7 @@ def sidebar() -> rx.Component:
                 ),
                 rx.flex(
                     rx.image(
-                        src="sidebar_house-chimney.png",
+                        src="/sidebar_house-chimney.png",
                         width="10%",
                         height="10%"
                     ),
@@ -66,29 +66,13 @@ def sidebar() -> rx.Component:
                     width="100%",
                     spacing="3",
                     align="center",
-                    cursor="pointer"
+                    cursor="pointer",
+                    on_click=rx.redirect("/")
                 ),
                 rx.divider(),
                 rx.flex(
                     rx.image(
-                        src="sidebar_book-alt.png",
-                        width="10%",
-                        height="10%"
-                    ),
-                    rx.text(
-                        "Booking",
-                        color="black",
-                        font_size="1.3em"
-                    ),
-                    width="100%",
-                    spacing="3",
-                    align="center",
-                    cursor="pointer"
-                ),
-                rx.divider(),
-                rx.flex(
-                    rx.image(
-                        src="sidebar_user.png",
+                        src="/sidebar_user.png",
                         width="10%",
                         height="10%"
                     ),
@@ -100,12 +84,75 @@ def sidebar() -> rx.Component:
                     width="100%",
                     spacing="3",
                     align="center",
-                    cursor="pointer"
+                    cursor="pointer",
+                    on_click=rx.redirect("/account")
+                ),
+                rx.divider(),
+                rx.cond(
+                    State.role == "admin",
+                    rx.flex(
+                        rx.image(
+                            src="/sidebar_square-plus.png",
+                            width="10%",
+                            height="10%"
+                        ),
+                        rx.text(
+                            "Add resource",
+                            color="black",
+                            font_size="1.3em",
+                        ),
+                        width="100%",
+                        spacing="3",
+                        align="center",
+                        cursor="pointer",
+                        on_click=rx.redirect("/add-resource")
+                    ),
+                    rx.flex(
+                        rx.image(
+                            src="/sidebar_book-alt.png",
+                            width="10%",
+                            height="10%"
+                        ),
+                        rx.text(
+                            "Booking",
+                            color="black",
+                            font_size="1.3em",
+                        ),
+                        width="100%",
+                        spacing="3",
+                        align="center",
+                        cursor="pointer",
+                        on_click=rx.redirect("/booking")
+                    )
+                ),
+                rx.cond(
+                    State.role == "admin",
+                    rx.divider()
+                ),
+                rx.cond(
+                    State.role == "admin",
+                    rx.flex(
+                        rx.image(
+                            src="/sidebar_search.png",
+                            width="10%",
+                            height="10%"
+                        ),
+                        rx.text(
+                            "Requests",
+                            color="black",
+                            font_size="1.3em",
+                        ),
+                        width="100%",
+                        spacing="3",
+                        align="center",
+                        cursor="pointer",
+                        on_click=rx.redirect("/admin/requests")
+                    ),
                 ),
                 rx.divider(),
                 rx.flex(
                     rx.image(
-                        src="sidebar_leave.png",
+                        src="/sidebar_leave.png",
                         width="10%",
                         height="10%"
                     ),

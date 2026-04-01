@@ -30,10 +30,14 @@ class LoginState(rx.State):
             home_state = await self.get_state(State)
             home_state.set_user_data(
                 username=self.username,
-                role=self.role,
                 token=self.token,
                 token_type=self.token_type,
             )
+            decoded = home_state.verify_token()['message']['role']
+            home_state.set_user_data(
+                role=decoded
+            )
+            print(decoded)
 
             return rx.redirect("/")
         elif res.status_code == 401:

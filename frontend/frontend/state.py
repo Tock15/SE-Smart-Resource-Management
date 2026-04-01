@@ -25,25 +25,38 @@ class State(rx.State):
             self.token = token
         if token_type is not None:
             self.token_type = token_type
+        print(self.username, self.role)
     def logout(self):
         self.username = ""
         self.role = ""
         self.token = ""
         self.token_type = ""
 
-    def verify_token(self):
-        if not self.token:
-            return({"message:" : "token not found",
-                   "status" : "ERROR"})
+    def user_authorization(self):
+        if not self.user_check():
+            return rx.redirect("/login")
+    def admin_authorization(self):
+        # print("Role: ", self.role)
+        if not self.admin_check():
+            return rx.redirect("/")
+    def admin_check(self):
+        return (self.username != "" and self.token != "")
+    def user_check(self):
+        return (self.username != "" and self.token != "" and self.role == "admin")
 
+
+    def verify_token(self):
+        if self.token == "":
+            return({"message" : "token not found",
+                   "status" : "ERROR"})
         try:
             decoded = jwt.decode(self.token, SECRET_KEY, algorithms=["HS256"])
-            return({"message:" : decoded,
+            return({"message" : decoded,
                    "status" : "OK"})
         except jwt.ExpiredSignatureError:
-            return({"message:" : "Token expired",
+            return({"message" : "Token expired",
                    "status" : "ERROR"})
         except jwt.InvalidTokenError:
-            return({"message:" : "Invalid token",
+            return({"message" : "Invalid token",
                    "status" : "ERROR"})
 
