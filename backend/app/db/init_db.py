@@ -90,6 +90,35 @@ def init_db():
             db.add(new_booking)
         else:
             print("Booking already exists, skipping...")
+        booking_exists2 = db.query(booking.Booking).filter_by(user_id=2, resource_id=2).first()
+        if not booking_exists2:
+            print("Seeding Booking 2...")
+            timeslot2 = booking.Timeslot(
+                start_time="2024-07-02 14:00:00",
+                end_time="2024-07-02 16:00:00")
+            new_booking2 = booking.Booking(
+                user_id=2,
+                resource_id=2,
+                timeslot=timeslot2
+            )
+            db.add(new_booking2)
+        else:
+            print("Booking 2 already exists, skipping...")
+
+        booking_exists3 = db.query(booking.Booking).filter_by(user_id=2, resource_id=1).first()
+        if not booking_exists3:
+            print("Seeding Booking 3...")
+            timeslot3 = booking.Timeslot(
+                start_time="2024-07-03 09:00:00",
+                end_time="2024-07-03 11:00:00")
+            new_booking3 = booking.Booking(
+                user_id=2,
+                resource_id=1,
+                timeslot=timeslot3
+            )
+            db.add(new_booking3)
+        else:
+            print("Booking 3 already exists, skipping...")
         
 
         db.commit()
