@@ -3,6 +3,7 @@ from datetime import datetime
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import and_, or_
 from app.models.booking import Booking, Timeslot, BookingStatus
+from app.models.resource import Resource
 from fastapi import HTTPException, status
 
 
@@ -20,7 +21,15 @@ class BookingService:
         return query.first() is None
 
     @staticmethod
-    def create_booking(db: Session, user_id: int, resource_id: int, start: datetime, end: datetime):
+    def create_booking(db: Session, user_id: int, resource_id: int, start: datetime, end: datetime, guests: list[int] = []):
+        resource = db.query(Resource).filter(Resource.resource_id == resource_id).first()
+    
+        total_people = len(guests) + 1 
+        if resource and total_people > resource.capacity:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Resource capacity exceeded. Max: {resource.capacity}"
+            )
         if start >= end:
             raise HTTPException(status_code=400, detail="Start time must be before end time")
         
@@ -38,7 +47,8 @@ class BookingService:
             user_id=user_id,
             resource_id=resource_id,
             timeslot_id=new_timeslot.timeslot_id,
-            status=BookingStatus.PENDING
+            status=BookingStatus.PENDING,
+            guests = guests
         )
         db.add(new_booking)
         db.commit()
@@ -51,14 +61,13 @@ class BookingService:
 
     @staticmethod
     def get_booking_history(db: Session, user_id: int = None, is_admin: bool = False):
-        query = db.query(Booking).options(joinedload(Booking.timeslot))
+        query = db.query(Booking).options(joinedload(Booking.timeslot), joinedload(Booking.resource), joinedload(Booking.user))
         
         if is_admin:
             if user_id:
                 query = query.filter(Booking.user_id == user_id)
             else:
                 query = query.filter(Booking.user_id == user_id)
-            
         return query.order_by(Booking.created_at.desc()).all()
     @staticmethod
     def update_booking_status(db: Session, booking_id: int, status: BookingStatus):
