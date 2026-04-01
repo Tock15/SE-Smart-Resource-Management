@@ -6,15 +6,23 @@ from frontend.state import State
 
 class BookingState(rx.State):
     resource: dict = {}
-    selected_time: str = ""
+    selected_times: list[str] = []
     selected_date: str = ""
     note: str = ""
+    start_date: str = ""
+    end_date: str = ""
+    
+    def set_start_date(self, value: str):
+        self.start_date = value
 
-    def select_time(self, time: str):
-        self.selected_time = time
-
-    def set_note(self, value: str):
-        self.note = value
+    def set_end_date(self, value: str):
+        self.end_date = value
+    
+    def toggle_time(self, time: str):
+        if time in self.selected_times:
+            self.selected_times = [t for t in self.selected_times if t != time]
+        else:
+            self.selected_times.append(time)
 
     def set_selected_date(self, value: str):
         self.selected_date = value
@@ -47,14 +55,11 @@ class BookingState(rx.State):
         if res.status_code == 200:
             data = res.json()
             self.resource = self.data_to_resource(data)
-            print(self.resource)
         else:
             return rx.redirect("/")
 
-
     async def authorization(self):
         dashboard_state = await self.get_state(State)
-        print(dashboard_state.user_check())
         if dashboard_state.user_check():
             return await self.fetch_resource()
         else:
@@ -92,25 +97,35 @@ def navbar() -> rx.Component:
         z_index="100",
     )
 
-
-def time_slot(time: str) -> rx.Component:
+def time_button(time: str) -> rx.Component:
+    is_selected = BookingState.selected_times.contains(time)
     return rx.box(
         rx.hstack(
-            rx.box(width="8px", height="8px", border_radius="50%", bg="#22c55e", flex_shrink="0"),
-            rx.text(time, font_size="14px", color="black"),
+            rx.icon(
+                "clock",
+                size=13,
+                color=rx.cond(is_selected, "#1E88E5", "#9e9e9e"),
+                flex_shrink="0",
+            ),
+            rx.text(
+                time,
+                font_size="13px",
+                font_weight=rx.cond(is_selected, "600", "400"),
+                color=rx.cond(is_selected, "#1E88E5", "black"),
+            ),
             align="center",
             spacing="2",
         ),
-        padding="12px 16px",
+        padding="10px 14px",
         border_radius="8px",
         border=rx.cond(
-            time == BookingState.selected_time,
+            is_selected,
             "1.5px solid #1E88E5",
             "1.5px solid #e0e0e0",
         ),
-        bg=rx.cond(time == BookingState.selected_time, "#EBF5FB", "white"),
+        bg=rx.cond(is_selected, "#EBF5FB", "white"),
         cursor="pointer",
-        on_click=BookingState.select_time(time),
+        on_click=BookingState.toggle_time(time),
         width="100%",
         _hover={"border": "1.5px solid #1E88E5", "bg": "#EBF5FB"},
     )
@@ -119,8 +134,16 @@ def time_slot(time: str) -> rx.Component:
 @rx.page(route="/booking/[booking_id]", on_load=BookingState.authorization)
 def booking_page() -> rx.Component:
     time_slots = [
-        "09:00 AM", "09:30 AM", "10:00 AM", "10:30 AM",
-        "11:00 AM", "11:30 AM", "12:00 PM", "12:30 PM",
+        "08:00 - 09:00",
+        "09:00 - 10:00",
+        "10:00 - 11:00",
+        "11:00 - 12:00",
+        "12:00 - 13:00",
+        "13:00 - 14:00",
+        "14:00 - 15:00",
+        "15:00 - 16:00",
+        "16:00 - 17:00",
+        "17:00 - 18:00",
     ]
 
     return rx.box(
@@ -128,10 +151,17 @@ def booking_page() -> rx.Component:
         rx.box(
             rx.cond(
                 BookingState.resource["type"] == "coworking_space",
+
+                # ── Coworking space layout ──────────────────────────────────
                 rx.hstack(
+                    # Left column — room info
                     rx.vstack(
                         rx.heading("Book a Room", size="7", color="black"),
-                        rx.text("Fill in the details to reserve your space.", color="gray", font_size="14px"),
+                        rx.text(
+                            "Fill in the details to reserve your space.",
+                            color="gray",
+                            font_size="14px",
+                        ),
                         rx.divider(),
                         rx.hstack(
                             rx.image(
@@ -139,24 +169,30 @@ def booking_page() -> rx.Component:
                                 width="80px",
                                 height="80px",
                                 object_fit="cover",
-                                border_radius="10px"
+                                border_radius="10px",
                             ),
                             rx.vstack(
                                 rx.text(
                                     BookingState.resource["name"],
                                     font_weight="bold",
                                     font_size="16px",
-                                    color="black"
+                                    color="black",
                                 ),
                                 rx.hstack(
                                     rx.icon("map-pin", size=14, color="#1E88E5"),
                                     rx.text(
                                         BookingState.resource["room_no"],
                                         font_size="13px",
-                                        color="#1E88E5"
-                                    )
+                                        color="#1E88E5",
+                                    ),
+                                    align="center",
+                                    spacing="1",
                                 ),
-                                rx.text("Open hours: 09:00 AM - 05:00 PM", font_size="13px", color="gray"),
+                                rx.text(
+                                    "Open hours: 08:00 AM - 06:00 PM",
+                                    font_size="13px",
+                                    color="gray",
+                                ),
                                 align="start",
                                 spacing="1",
                             ),
@@ -172,9 +208,17 @@ def booking_page() -> rx.Component:
                         width="100%",
                         max_width="400px",
                     ),
+
+                    # Right column — date + days + times
                     rx.vstack(
+                        # Date picker
                         rx.vstack(
-                            rx.text("Select Date", font_size="13px", font_weight="bold", color="gray"),
+                            rx.text(
+                                "Select Date",
+                                font_size="13px",
+                                font_weight="bold",
+                                color="gray",
+                            ),
                             rx.input(
                                 type="date",
                                 value=BookingState.selected_date,
@@ -183,6 +227,9 @@ def booking_page() -> rx.Component:
                                 border_radius="8px",
                                 padding="10px",
                                 width="100%",
+                                 bg="white",
+                                color="black",
+                                height="45px",
                                 _focus={"border": "1.5px solid #1E88E5", "outline": "none"},
                             ),
                             align="start",
@@ -190,10 +237,17 @@ def booking_page() -> rx.Component:
                             spacing="2",
                             margin_top="20px",
                         ),
+
+                        # ── ime slot selector ──────────────────────────────
                         rx.vstack(
-                            rx.text("Select Time", font_size="13px", font_weight="bold", color="gray"),
+                            rx.text(
+                                "Select Time Slots",
+                                font_size="13px",
+                                font_weight="bold",
+                                color="gray",
+                            ),
                             rx.grid(
-                                *[time_slot(t) for t in time_slots],
+                                *[time_button(slot) for slot in time_slots],
                                 columns="2",
                                 spacing="2",
                                 width="100%",
@@ -202,27 +256,204 @@ def booking_page() -> rx.Component:
                             width="100%",
                             spacing="2",
                         ),
+
+                        # Selected times summary
+                        rx.cond(
+                            BookingState.selected_times,
+                            rx.box(
+                                rx.hstack(
+                                    rx.icon("clock", size=14, color="#1E88E5"),
+                                    rx.text(
+                                        "Time slots: ",
+                                        font_size="13px",
+                                        font_weight="600",
+                                        color="#1E88E5",
+                                    ),
+                                    rx.text(
+                                        BookingState.selected_times.join(", "),
+                                        font_size="13px",
+                                        color="#555",
+                                    ),
+                                    align="center",
+                                    spacing="1",
+                                    flex_wrap="wrap",
+                                ),
+                                bg="#EBF5FB",
+                                border="1px solid #b3d4f7",
+                                border_radius="8px",
+                                padding="10px 14px",
+                                width="100%",
+                            ),
+                            rx.box(),
+                        ),
+
+                        # Confirm button
+                        rx.button(
+                            "Confirm Booking",
+                            on_click=BookingState.submit_booking,
+                            bg="#1E88E5",
+                            color="white",
+                            border_radius="8px",
+                            padding="12px 0",
+                            font_size="14px",
+                            font_weight="600",
+                            width="100%",
+                            _hover={"bg": "#1565C0"},
+                            cursor="pointer",
+                        ),
+
                         align="start",
                         spacing="5",
                         width="100%",
                         max_width="350px",
                     ),
+
                     align="start",
                     spacing="9",
                     width="100%",
                     justify="center",
                 ),
-                rx.box(
-                    rx.text("id: ", BookingState.resource["id"],
-                            color="black"
+
+                # ── Fallback for other resource types ───────────────────────
+                rx.vstack(
+            rx.heading("Book a Resource", size="7", color="black"),
+            rx.text(
+                "Fill in the details to reserve your resource.",
+                color="gray",
+                font_size="14px",
+            ),
+            rx.divider(),
+
+            # Resource info card
+            rx.hstack(
+                rx.vstack(
+                    rx.text(
+                        BookingState.resource["name"],
+                        font_weight="bold",
+                        font_size="16px",
+                        color="black",
                     ),
-                    rx.text("name: ", BookingState.resource["name"],
-                            color="black"
+                    rx.text(
+                        BookingState.resource["type"],
+                        font_size="13px",
+                        color="#1E88E5",
                     ),
-                    rx.text("type: ", BookingState.resource["type"],
-                            color="black"
-                    )
+                    align="start",
+                    spacing="1",
                 ),
+                padding="16px",
+                border="1.5px solid #e0e0e0",
+                border_radius="12px",
+                width="100%",
+            ),
+
+            # Date range picker
+            rx.vstack(
+                rx.text(
+                    "Select Date Range",
+                    font_size="13px",
+                    font_weight="bold",
+                    color="gray",
+                ),
+                rx.hstack(
+                    rx.vstack(
+                        rx.text("Start Date", font_size="12px", color="gray"),
+                        rx.input(
+                            type="date",
+                            value=BookingState.start_date,
+                            on_change=BookingState.set_start_date,
+                            border="1.5px solid #e0e0e0",
+                            border_radius="8px",
+                            padding="10px",
+                            width="100%",
+                            height="45px",
+                             bg="white",
+                             color="black",
+                            _focus={"border": "1.5px solid #1E88E5", "outline": "none"},
+                        ),
+                        align="start",
+                        spacing="1",
+                        width="100%",
+                    ),
+                    rx.icon("arrow-right", size=16, color="#9e9e9e", margin_top="22px"),
+                    rx.vstack(
+                        rx.text("End Date", font_size="12px", color="gray"),
+                        rx.input(
+                            type="date",
+                            value=BookingState.end_date,
+                            on_change=BookingState.set_end_date,
+                            border="1.5px solid #e0e0e0",
+                            border_radius="8px",
+                            padding="10px",
+                            width="100%",
+                            height="45px",
+                            bg="white",
+                            color="black",
+                            _focus={"border": "1.5px solid #1E88E5", "outline": "none"},
+                        ),
+                        align="start",
+                        spacing="1",
+                        width="100%",
+                    ),
+                    align="end",
+                    spacing="3",
+                    width="100%",
+                ),
+                align="start",
+                width="100%",
+                spacing="2",
+            ),
+
+                rx.cond(
+                    BookingState.start_date & BookingState.end_date,
+                    rx.box(
+                        rx.hstack(
+                            rx.icon("calendar", size=14, color="#1E88E5"),
+                            rx.text(
+                                "Booking period: ",
+                                font_size="13px",
+                                font_weight="600",
+                                color="#1E88E5",
+                            ),
+                            rx.text(
+                                BookingState.start_date + " → " + BookingState.end_date,
+                                font_size="13px",
+                                color="#555",
+                            ),
+                            align="center",
+                            spacing="1",
+                        ),
+                        bg="#EBF5FB",
+                        border="1px solid #b3d4f7",
+                        border_radius="8px",
+                        padding="10px 14px",
+                        width="100%",
+                    ),
+                    rx.box(),
+                ),
+
+                # Confirm button
+                rx.button(
+                    "Confirm Booking",
+                    on_click=BookingState.submit_booking,
+                    bg="#1E88E5",
+                    color="white",
+                    border_radius="8px",
+                    padding="12px 0",
+                    font_size="14px",
+                    font_weight="600",
+                    width="100%",
+                    max_width="400px",
+                    _hover={"bg": "#1565C0"},
+                    cursor="pointer",
+                ),
+
+                align="center",
+                spacing="5",
+                width="100%",
+                max_width="500px",
+                margin_left="500px",
+            ),
             ),
             padding="40px",
             bg="white",
