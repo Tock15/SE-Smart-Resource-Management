@@ -140,7 +140,7 @@ def index() -> rx.Component:
                             width="15vw",
                             border="1px solid black",
                             cursor="pointer",
-                            on_click=rx.redirect("/rooms")
+                            on_click=rx.redirect("/resource/rooms")
                         ),
                         rx.card(
                             rx.flex(
@@ -166,7 +166,7 @@ def index() -> rx.Component:
                             width="15vw",
                             border="1px solid black",
                             cursor="pointer",
-                            on_click=rx.redirect("/locker")
+                            on_click=rx.redirect("/resource/locker")
                         ),
                         rx.card(
                             rx.flex(
@@ -192,7 +192,7 @@ def index() -> rx.Component:
                             width="15vw",
                             border="1px solid black",
                             cursor="pointer",
-                            on_click=rx.redirect("/lab-equipments")
+                            on_click=rx.redirect("/resource/equipment")
                         ),
                         spacing="9",
                         justify="center",

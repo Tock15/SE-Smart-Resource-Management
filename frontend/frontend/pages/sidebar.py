@@ -122,7 +122,7 @@ def sidebar() -> rx.Component:
                         spacing="3",
                         align="center",
                         cursor="pointer",
-                        on_click=rx.redirect("/booking")
+                        on_click=rx.redirect("/history")
                     )
                 ),
                 rx.cond(
