@@ -49,6 +49,7 @@ async def create_resource(
     type: str = Form(...),
     room_no: str = Form(None),
     capacity: int = Form(None),
+    min_guests: int = Form(None),
     locker_no: str = Form(None),
     serial_no: str = Form(None),
     image: UploadFile = File(None), # The image file
@@ -60,7 +61,7 @@ async def create_resource(
 
     resource_dict = {
         "name": name, "description": description, "type": type,
-        "room_no": room_no, "capacity": capacity, 
+        "room_no": room_no, "capacity": capacity, "min_guests": min_guests,
         "locker_no": locker_no, "serial_no": serial_no
     }
     
