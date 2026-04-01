@@ -226,6 +226,7 @@ def admin_dashboard() -> rx.Component:
                         filter_button("Approved", "approved"),
                         filter_button("Rejected", "rejected"),
                         filter_button("Cancelled", "cancelled"),
+                        filter_button("Overwritten", "overwritten"),
                         spacing="2",
                         wrap="wrap",
                     ),
