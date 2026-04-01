@@ -105,7 +105,7 @@ def sidebar() -> rx.Component:
                         spacing="3",
                         align="center",
                         cursor="pointer",
-                        on_click=rx.redirect("/add-resource")
+                        on_click=rx.redirect("/admin/resources")
                     ),
                     rx.flex(
                         rx.image(
