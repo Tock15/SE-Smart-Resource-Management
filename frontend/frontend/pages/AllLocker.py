@@ -3,21 +3,19 @@
 import reflex as rx
 
 from rxconfig import config
-import requests
 from .sidebar import SidebarState, sidebar
+import requests
 
 class MyState(rx.State):
     data: list[dict] = []
     search_query: str = ""
 
     def get_data(self):
-        res = requests.get("http://127.0.0.1:8000/resources/coworking-spaces")
+        res = requests.get("http://127.0.0.1:8000/resources/lockers")
         if res.status_code == 200:
             self.data = res.json()
-            
     def set_search(self, value: str):
         self.search_query = value
-
     @rx.var
     def filtered_data(self) -> list[dict]:
         if not self.search_query:
@@ -26,11 +24,11 @@ class MyState(rx.State):
             item for item in self.data
             if self.search_query.lower() in item["name"].lower()
         ]
-
 def navbar() -> rx.Component:
     return rx.box(
         sidebar(),
         rx.grid(
+            # Left - Logo
             rx.hstack(
                 rx.flex(
                         rx.image(
@@ -38,8 +36,7 @@ def navbar() -> rx.Component:
                             width="28px",
                             height="28px",
                             cursor="pointer",
-                            on_click=SidebarState.open_sidebar,
-                            color="white"# connect button here
+                            on_click=SidebarState.open_sidebar,   # connect button here
                         ),
                         rx.text(
                             "SERSM",
@@ -81,7 +78,7 @@ def navbar() -> rx.Component:
             # Right - Back button
             rx.hstack(
                 rx.link(
-                   rx.hstack(
+                    rx.hstack(
                         rx.text("Back", color="white", font_weight="bold",
                             font_size="1.5em",),
                         rx.icon("arrow-right", color="white", font_weight="bold",
@@ -111,12 +108,11 @@ def navbar() -> rx.Component:
     )
 
 
-def hotel_page() -> rx.Component:
+def locker_page() -> rx.Component:
     return rx.box(
-        
         navbar(),
         rx.vstack(
-            rx.foreach(MyState.filtered_data, hotel_card),
+            rx.foreach(MyState.filtered_data, locker_card),
             align="center",        # ← center the cards
             width="100%",
             spacing="4",
@@ -127,10 +123,9 @@ def hotel_page() -> rx.Component:
         min_height="120vh",
     ),
     
-def hotel_card(item: dict) -> rx.Component:
+def locker_card(item: dict) -> rx.Component:
     return rx.link(
         rx.flex(
-            # Left - Images
             rx.box(
                 rx.image(
                     src="/pic/room1.jpg",
@@ -141,15 +136,15 @@ def hotel_card(item: dict) -> rx.Component:
                 ),
             ),
 
-            # Middle - Info
             rx.box(
                 rx.vstack(
                     rx.heading(item["name"], size="7",color="black"),
                     rx.hstack(
-                        rx.badge("Room ", item["room_no"], color_scheme="blue"),
+                        rx.badge("Room ", item["type"], color_scheme="blue"),
+                        rx.badge(item["locker_no"], color_scheme="cyan"),
                     ),
                     rx.text(
-                        item["description"],
+                        "i dont know what to put in since the ",
                         font_size="13px",
                         color="gray",
                         margin_top="10px"
@@ -158,36 +153,6 @@ def hotel_card(item: dict) -> rx.Component:
                     spacing="2"
                 ),
                 flex="1",
-                padding="15px",
-            ),
-
-            # Right - Rating & Price
-            rx.box(
-                rx.vstack(
-                    # Rating
-                    rx.hstack(
-                        rx.vstack(
-                            rx.text("Capacity", font_size="17px", font_weight="bold",color="black"),
-                            align="end",
-                            spacing="0"
-                        ),
-                        rx.box(
-                            rx.text(item["capacity"], color="white", font_weight="bold", font_size="18px"),
-                            bg="#1E88E5",
-                            padding="8px 12px",
-                            border_radius="8px 8px 8px 0px",
-                        ),
-                        spacing="2",
-                        align="center"
-                    ),
-
-                    align="end",
-                    spacing="2",
-                    height="100%",
-                    justify="between"
-                ),
-                width="200px",
-                flex_shrink="0",
                 padding="15px",
             ),
 
@@ -202,7 +167,7 @@ def hotel_card(item: dict) -> rx.Component:
         max_width="900px",
         href=f"/resource/{item['resource_id']}",  # ← dynamic route per card
         text_decoration="none",
-        box_shadow="0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)"      
+        box_shadow="0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)"
         
     )
     

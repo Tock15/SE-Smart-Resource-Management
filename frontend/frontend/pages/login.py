@@ -146,7 +146,7 @@ def login_page() -> rx.Component:
         height="600px",
         padding="20px",
         border_radius="60px",
-        bg="linear-gradient(to right, #4facfe, #00f2fe)"
+        bg="linear-gradient(135deg, #29B6F6, #0288D1)"
     ),
     height="100vh",
     bg="gray"
