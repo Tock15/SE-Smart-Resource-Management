@@ -200,7 +200,7 @@ def hotel_card(item: dict) -> rx.Component:
         bg="white",
         width="900px",
         max_width="900px",
-        href=f"/resource/{item['resource_id']}",  # ← dynamic route per card
+        href=f"/booking/{item['resource_id']}",  # ← dynamic route per card
         text_decoration="none",
         box_shadow="0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)"      
         

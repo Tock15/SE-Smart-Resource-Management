@@ -199,7 +199,7 @@ def eq_card(item: dict) -> rx.Component:
         bg="white",
         width="900px",
         max_width="900px",
-        href=f"/resource/{item['resource_id']}",  # ← dynamic route per card
+        href=f"/booking/{item['resource_id']}",  # ← dynamic route per card
         text_decoration="none"
 
         

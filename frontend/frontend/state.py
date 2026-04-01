@@ -25,7 +25,6 @@ class State(rx.State):
             self.token = token
         if token_type is not None:
             self.token_type = token_type
-        print(self.username, self.role)
     def logout(self):
         self.username = ""
         self.role = ""
@@ -40,9 +39,9 @@ class State(rx.State):
         if not self.admin_check():
             return rx.redirect("/")
     def admin_check(self):
-        return (self.username != "" and self.token != "")
-    def user_check(self):
         return (self.username != "" and self.token != "" and self.role == "admin")
+    def user_check(self):
+        return (self.username != "" and self.token != "")
 
 
     def verify_token(self):
