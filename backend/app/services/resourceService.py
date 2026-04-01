@@ -37,6 +37,7 @@ class ResourceService:
                 description=resource_data["description"],
                 room_no=resource_data["room_no"],
                 capacity=resource_data["capacity"],
+                min_guests=resource_data.get("min_guests"),
                 image_url=image_url
             )
         elif res_type == "locker":
