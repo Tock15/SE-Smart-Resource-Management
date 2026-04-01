@@ -1,10 +1,11 @@
 from email import message
 
 from fastapi import Depends, HTTPException, status, APIRouter
+from fastapi import UploadFile, File, Form
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from app.db.session import SessionLocal
-from app.models.user import Admin
+from app.models.user import Admin, User
 from app.routes.authRoute import get_current_user
 from app.services.resourceService import ResourceService
 from app.services.bookingService import BookingService
@@ -39,15 +40,31 @@ def get_db():
     finally:
         db.close()
 
+
+
 @router.post("/resources", status_code=status.HTTP_201_CREATED)
-async def create_resource(resource_in: ResourceCreate, db: Session = Depends(get_db), current_user: Admin = Depends(get_current_user)):
-    if not current_user.role == "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only admins can create resources"
-        )
+async def create_resource(
+    name: str = Form(...),
+    description: str = Form(...),
+    type: str = Form(...),
+    room_no: str = Form(None),
+    capacity: int = Form(None),
+    locker_no: str = Form(None),
+    serial_no: str = Form(None),
+    image: UploadFile = File(None), # The image file
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Admins only")
+
+    resource_dict = {
+        "name": name, "description": description, "type": type,
+        "room_no": room_no, "capacity": capacity, 
+        "locker_no": locker_no, "serial_no": serial_no
+    }
     
-    return ResourceService.create_resource(db, resource_in)
+    return ResourceService.create_resource(db, resource_dict, image)
 
 @router.put("/resources/{resource_id}")
 async def update_resource(resource_id: int, resource_in: ResourceCreate, db: Session = Depends(get_db), current_user: Admin = Depends(get_current_user)):

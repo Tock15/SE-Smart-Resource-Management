@@ -103,4 +103,8 @@ async def get_booking(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to view this booking")
     return booking
 
+@router.get("/existing/{student_id}", response_model=UserResponse)
+async def get_existing_user(student_id: str, db: Session = Depends(get_db)):
+    return BookingService.findUserByStudentId(db, student_id)
+
 
