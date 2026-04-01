@@ -15,6 +15,7 @@ class ResourceRow(TypedDict):
     min_guests: str
     locker_no: str
     serial_no: str
+    image_name: str
 
 
 class ResourceState(rx.State):
@@ -45,6 +46,9 @@ class ResourceState(rx.State):
     add_locker_no: str = ""
     add_serial_no: str = ""
     add_min_guests: str = ""
+    add_image_name: str = ""
+    add_image_bytes: bytes = b""
+    add_image_content_type: str = ""
 
     def dataJSON_to_list(self, data) -> list[ResourceRow]:
         result = []
@@ -136,6 +140,15 @@ class ResourceState(rx.State):
 
     def set_add_min_guests(self, value: str):
         self.add_min_guests = value
+    
+    def set_add_image_name(self, value: str):
+        self.add_image_name = value
+    async def handle_add_image_upload(self, files: list[rx.UploadFile]):
+        if files:
+            file = files[0]
+            self.add_image_name = file.filename
+            self.add_image_bytes = await file.read()
+            self.add_image_content_type = file.content_type or "application/octet-stream"
 
     def set_edit_open(self, value: bool):
         self.edit_open = value
@@ -193,27 +206,33 @@ class ResourceState(rx.State):
         elif self.add_type == "locker":
             payload = {
                 "name": self.add_name,
+                "description": self.add_description,
                 "type": self.add_type,
                 "locker_no": self.add_locker_no,
             }
-        else:  # equipment
+        else:
             payload = {
                 "name": self.add_name,
                 "description": self.add_description,
                 "type": self.add_type,
                 "serial_no": self.add_serial_no,
             }
-        print(payload)
+
+        files = None
+        if self.add_image_bytes:
+            files = {
+                "image": (self.add_image_name, self.add_image_bytes, self.add_image_content_type)
+            }
+
         res = requests.post(
             "http://localhost:8000/admin/resources",
             data=payload,
+            files=files,
             headers={"Authorization": f"Bearer {dashboard_state.token}"}
         )
         self.add_open = False
-        print(res.json())
         if res.status_code in (200, 201):
             return await self.fetch_resource()
-
     # ── Edit resource ─────────────────────────────────────
     def open_edit_dialog(self, row: ResourceRow):
         self.edit_id = row["resource_id"]
@@ -240,13 +259,15 @@ class ResourceState(rx.State):
                 "type": self.edit_type,
                 "room_no": self.edit_room_no,
                 "capacity": int(self.edit_capacity) if self.edit_capacity else 0,
-                "min_guests": int(self.add_min_guests) if self.add_min_guests else 0,
+                "min_guests": int(self.edit_min_guests) if self.edit_min_guests else 0,
             }
         elif self.edit_type == "locker":
             payload = {
                 "name": self.edit_name,
+                "description": self.add_description,
                 "type": self.edit_type,
                 "locker_no": self.edit_locker_no,
+
             }
         else:  # equipment
             payload = {
@@ -357,6 +378,12 @@ def add_form_fields() -> rx.Component:
         rx.cond(
             ResourceState.add_type == "locker",
             rx.flex(
+                rx.text("Description", color="white", font_weight="bold"),
+                rx.text_area(
+                    value=ResourceState.add_description,
+                    on_change=ResourceState.set_add_description,
+                    placeholder="Description",
+                ),
                 rx.text("Locker No.", color="white", font_weight="bold"),
                 rx.input(
                     value=ResourceState.add_locker_no,
@@ -391,6 +418,28 @@ def add_form_fields() -> rx.Component:
                 width="100%",
             ),
             rx.fragment(),
+        ),
+        rx.text("Picture", color="white", font_weight="bold"),
+        rx.upload(
+            rx.vstack(
+                rx.button("Choose Image", type="button"),
+                rx.text(
+                    rx.cond(
+                        ResourceState.add_image_name != "",
+                        ResourceState.add_image_name,
+                        "No image selected"
+                    ),
+                    color="white",
+                ),
+                align="start",
+            ),
+            id="add_resource_image_upload",
+            accept={"image/*": [".png", ".jpg", ".jpeg", ".webp"]},
+            max_files=1,
+            width="100%",
+            on_drop=ResourceState.handle_add_image_upload(
+                rx.upload_files(upload_id="add_resource_image_upload")
+            ),
         ),
 
         direction="column",
@@ -452,6 +501,12 @@ def edit_form_fields() -> rx.Component:
         rx.cond(
             ResourceState.edit_type == "locker",
             rx.flex(
+                rx.text("Description", color="white", font_weight="bold"),
+                rx.text_area(
+                    value=ResourceState.add_description,
+                    on_change=ResourceState.set_add_description,
+                    placeholder="Description",
+                ),
                 rx.text("Locker No.", color="white", font_weight="bold"),
                 rx.input(
                     value=ResourceState.edit_locker_no,
@@ -556,7 +611,7 @@ def admin_resource() -> rx.Component:
                                 rx.button(
                                     "Add",
                                     color_scheme="blue",
-                                    on_click=ResourceState.submit_add_resource,
+                                    on_click=ResourceState.submit_add_resource,  # remove handle_add_image_upload here
                                 ),
                                 justify="end",
                                 spacing="2",

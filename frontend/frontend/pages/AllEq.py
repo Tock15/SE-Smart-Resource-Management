@@ -131,8 +131,12 @@ def eq_card(item: dict) -> rx.Component:
             # Left - Images
             rx.box(
                 rx.image(
-                    src="/pic/room1.jpg",
-                    width="100%",
+                    src=rx.cond(
+                        item["image_url"],
+                        f"http://localhost:8000{item["image_url"]}",
+                        "/pic/room1.jpg"
+                    ),
+                    width="200px",
                     height="200px",
                     object_fit="cover",
                     border_radius="8px 8px 0 0"
