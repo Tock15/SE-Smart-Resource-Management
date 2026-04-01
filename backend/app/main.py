@@ -5,7 +5,7 @@ from app.routes.authRoute import router as auth_router
 from app.routes.adminRoute import router as admin_router
 from app.routes.resourceRoute import router as resource_router
 from app.routes.bookingRoute import router as booking_router
-
+from fastapi.staticfiles import StaticFiles
 
 
 
@@ -16,6 +16,8 @@ async def lifespan(app: FastAPI):
     print("Shutting down...")
 
 app = FastAPI(lifespan=lifespan)
+
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 app.include_router(auth_router)
 app.include_router(admin_router)

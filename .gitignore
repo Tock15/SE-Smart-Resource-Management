@@ -4,3 +4,6 @@ __pycache__/
 venv/
 
 .env
+
+backend/app/static/resources/*
+!backend/app/static/resources/.gitkeep
