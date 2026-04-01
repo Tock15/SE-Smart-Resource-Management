@@ -70,7 +70,8 @@ async def request_booking(
         user_id=current_user.user_id,
         resource_id=booking_in.resource_id,
         start=booking_in.start_time,
-        end=booking_in.end_time
+        end=booking_in.end_time,
+        guest_ids=booking_in.guests
     )
     return new_booking
 
@@ -80,11 +81,12 @@ async def get_history(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    is_admin = False
+    is_admin = current_user.role == "admin"
+    print(f"User {current_user.username} is admin: {is_admin}")
 
     history = BookingService.get_booking_history(
         db=db, 
-        user_id=current_user.user_id, 
+        user_id=current_user.user_id if not is_admin else None, 
         is_admin=is_admin
     )
     return history
