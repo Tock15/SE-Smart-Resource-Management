@@ -206,7 +206,7 @@ class ResourceState(rx.State):
         print(payload)
         res = requests.post(
             "http://localhost:8000/admin/resources",
-            json=payload,
+            data=payload,
             headers={"Authorization": f"Bearer {dashboard_state.token}"}
         )
         self.add_open = False
