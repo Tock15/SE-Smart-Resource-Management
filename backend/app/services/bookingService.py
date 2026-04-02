@@ -1,5 +1,5 @@
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import and_, or_
 from app.models.booking import Booking, Timeslot, BookingStatus
@@ -19,7 +19,7 @@ class BookingService:
                 Timeslot.end_time > start
             )
         )
-        return query.first() is None
+        return query.all()
 
     @staticmethod
     def create_booking(db: Session, user_id: int, resource_id: int, start: datetime, end: datetime, guest_ids: list[int] = []):
@@ -65,11 +65,34 @@ class BookingService:
   
         
         
-        if not BookingService.check_availability(db, resource_id, start, end):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, 
-                detail="Resource is already booked for this time period"
-            )
+        conflicts = BookingService.check_availability(db, resource_id, start, end)
+        if conflicts:
+            requesting_user = db.query(User).filter(User.user_id == user_id).first()
+            
+            # PASS 1: Validation
+            # Ensure every single conflict meets the criteria before changing anything
+            for conflict in conflicts:
+                existing_user = conflict.user
+                time_until_booking = conflict.timeslot.start_time - datetime.now()
+                
+                is_overrideable = (
+                    requesting_user.role == "teacher" and 
+                    existing_user.role == "student" and 
+                    time_until_booking > timedelta(hours=24)
+                )
+                
+                if not is_overrideable:
+                    raise HTTPException(
+                        status_code=400, 
+                        detail="Resource is unavailable. One or more existing bookings cannot be overridden."
+                    )
+
+            # PASS 2: Execution
+            # If we reached here, it means ALL conflicts are overrideable
+            for conflict in conflicts:
+                conflict.status = BookingStatus.OVERRIDEN
+                # TODO: NotificationService.notify_overridden_user(conflict.user_id)
+
 
         new_timeslot = Timeslot(start_time=start, end_time=end)
         db.add(new_timeslot)
