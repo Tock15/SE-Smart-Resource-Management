@@ -30,23 +30,33 @@ class BookingState(rx.State):
         print(self.selected_date)
 
     async def submit_booking(self):
+        from datetime import datetime
         booking_state = await self.get_state(State)
         token_data = booking_state.verify_token()
 
         resource_id = self.router.page.params.get("booking_id", "")
-        start_time = self.start_date
-        end_time = self.end_date
-        guests = []
-        if self.resource["type"] == "coworking_space" : 
+
+        if self.resource["type"] == "coworking_space":
             guests = [int(token_data["message"]["id"])]
-            start_time = self.selected_date
-            end_time = start_time
-        
 
-        # send booking information to state
-        booking_state.set_booking_info(int(resource_id), start_time, end_time)
+            if len(self.selected_times) == 0:
+                return  # no time selected, do nothing
 
-        return rx.redirect("/invite")
+            # Sort selected times and pick first start and last end
+            sorted_times = sorted(self.selected_times)
+            first_start = sorted_times[0].split(" - ")[0]   # e.g. "08:00"
+            last_end = sorted_times[-1].split(" - ")[1]      # e.g. "10:00"
+
+            start_time = f"{self.selected_date}T{first_start}:00"
+            end_time = f"{self.selected_date}T{last_end}:00"
+
+            booking_state.set_booking_info(int(resource_id), start_time, end_time, self.resource["min_guests"])
+            return rx.redirect("/invite")
+        else:
+            start_time = f"{self.start_date}T00:00:00"
+            end_time = f"{self.end_date}T23:59:59"
+            booking_state.set_booking_info(int(resource_id), start_time, end_time)
+            return rx.redirect("/invite")
 
     def data_to_resource(self, data):
         return {
@@ -58,7 +68,31 @@ class BookingState(rx.State):
             "min_guests": data.get("min_guests", 0),
             "serial_no": data.get("serial_no", ""),
             "locker_no": data.get("locker_no", ""),
+            "bookings": data.get("bookings", []),
         }
+    @rx.var
+    def booked_slots(self) -> list[str]:
+        """Returns list of time slot strings (e.g. '08:00 - 09:00') that are already booked."""
+        booked = []
+        bookings = self.resource.get("bookings", [])
+        time_slots = [
+            "08:00 - 09:00", "09:00 - 10:00", "10:00 - 11:00", "11:00 - 12:00",
+            "12:00 - 13:00", "13:00 - 14:00", "14:00 - 15:00", "15:00 - 16:00",
+            "16:00 - 17:00", "17:00 - 18:00",
+        ]
+        for slot in time_slots:
+            slot_start, slot_end = slot.split(" - ")
+            for booking in bookings:
+                timeslot = booking.get("timeslot", {})
+                start_time = timeslot.get("start_time", "")
+                end_time = timeslot.get("end_time", "")
+                if start_time and end_time:
+                    booked_start = start_time[11:16]
+                    booked_end = end_time[11:16]
+                    if slot_start < booked_end and slot_end > booked_start:
+                        booked.append(slot)
+                        break
+        return booked
 
     def datetime_format(self, date_list):
         return f"{date_list[2]}-{date_list[1]}-{date_list[0]}"
@@ -126,19 +160,29 @@ def navbar() -> rx.Component:
 
 def time_button(time: str) -> rx.Component:
     is_selected = BookingState.selected_times.contains(time)
+    is_booked = BookingState.booked_slots.contains(time)
+
     return rx.box(
         rx.hstack(
             rx.icon(
                 "clock",
                 size=13,
-                color=rx.cond(is_selected, "#1E88E5", "#9e9e9e"),
+                color=rx.cond(
+                    is_booked,
+                    "#9e9e9e",
+                    rx.cond(is_selected, "#1E88E5", "#9e9e9e"),
+                ),
                 flex_shrink="0",
             ),
             rx.text(
                 time,
                 font_size="13px",
                 font_weight=rx.cond(is_selected, "600", "400"),
-                color=rx.cond(is_selected, "#1E88E5", "black"),
+                color=rx.cond(
+                    is_booked,
+                    "#9e9e9e",
+                    rx.cond(is_selected, "#1E88E5", "black"),
+                ),
             ),
             align="center",
             spacing="2",
@@ -146,16 +190,34 @@ def time_button(time: str) -> rx.Component:
         padding="10px 14px",
         border_radius="8px",
         border=rx.cond(
-            is_selected,
-            "1.5px solid #1E88E5",
-            "1.5px solid #e0e0e0",
+            is_booked,
+            "1.5px solid #d6d6d6",
+            rx.cond(
+                is_selected,
+                "1.5px solid #1E88E5",
+                "1.5px solid #e0e0e0",
+            ),
         ),
-        bg=rx.cond(is_selected, "#EBF5FB", "white"),
-        cursor="pointer",
-        on_click=BookingState.toggle_time(time),
+        bg=rx.cond(
+            is_booked,
+            "#f2f2f2",
+            rx.cond(is_selected, "#EBF5FB", "white"),
+        ),
+        cursor=rx.cond(is_booked, "not-allowed", "pointer"),
+        opacity=rx.cond(is_booked, "0.65", "1"),
+        on_click=rx.cond(
+            is_booked,
+            rx.noop(),
+            BookingState.toggle_time(time),
+        ),
         width="100%",
-        _hover={"border": "1.5px solid #1E88E5", "bg": "#EBF5FB"},
+        _hover=rx.cond(
+            is_booked,
+            {},
+            {"border": "1.5px solid #1E88E5", "bg": "#EBF5FB"},
+        ),
     )
+
 
 
 @rx.page(route="/booking/[booking_id]", on_load=BookingState.authorization)

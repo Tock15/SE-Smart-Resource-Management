@@ -6,6 +6,7 @@ import requests
 class InviteState(rx.State):
     student_id_input: str = ""
     invited_list: list[dict] = []
+    min_guests : int = 0
 
     def set_student_id(self, value: str):
         self.student_id_input = value
@@ -36,7 +37,7 @@ class InviteState(rx.State):
 
     async def authorization(self):
         invite_state = await self.get_state(State)
-        print(invite_state.booking_info)
+        self.min_guests = invite_state.booking_info["min_guests"]
         if not invite_state.user_check():
             return rx.redirect("/login")
 
@@ -246,12 +247,51 @@ def invite_page() -> rx.Component:
                 max_width="560px",
                 box_shadow="0 4px 32px rgba(30,136,229,0.10), 0 1px 4px rgba(0,0,0,0.06)",
             ),
+            rx.flex(
+                rx.box(
+                    rx.button(
+                        f"Proceed",
+                        is_disabled=InviteState.invited_list.length() + 1 < InviteState.min_guests,
+                        bg=rx.cond(
+                            InviteState.invited_list.length()+1 < InviteState.min_guests,
+                            "#616161",
+                            "#62C015",
+                        ),
+                        color="white",
+                        border_radius="10px",
+                        padding="11px 22px",
+                        font_size="20px",
+                        font_weight="900",
+                        _hover=rx.cond(
+                            InviteState.invited_list.length()+1 < InviteState.min_guests,
+                            {"bg": "#616161"},
+                            {"bg": "#56A912"},
+                        ),
+                        cursor="pointer",
+                        white_space="nowrap",
+                        height="60px",
+                        width="200px"
+                    ),
+                    rx.cond(
+                        InviteState.invited_list.length() + 1 < InviteState.min_guests,
+                        rx.text(f"Need {InviteState.min_guests - (InviteState.invited_list.length() + 1)} more people to book",
+                            color="red"
+                        )
+                    )
+                ),
+                justify="center",
+                margin_top="20px",
+                width="100%",
+                flex="1",
+            ),
             justify="center",
-            align="start",
+            align="start", # <- HERE
+            align_items="center",
             padding="48px 24px",
             bg="#f0f4fa",
             min_height="calc(100vh - 60px)",
             width="100%",
+            direction="column"
         ),
         margin="0",
         padding="0",

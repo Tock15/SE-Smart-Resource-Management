@@ -26,11 +26,11 @@ class State(rx.State):
             self.token = token
         if token_type is not None:
             self.token_type = token_type
-    def set_booking_info(self, resource_id, start_time, end_time, guests = []):
+    def set_booking_info(self, resource_id, start_time, end_time, min_guests = 0):
         self.booking_info["resource_id"] = resource_id
         self.booking_info["start_time"] = start_time
         self.booking_info["end_time"] = end_time
-        self.booking_info["guests"] = guests
+        self.booking_info["min_guests"] = min_guests
 
     def logout(self):
         self.username = ""
