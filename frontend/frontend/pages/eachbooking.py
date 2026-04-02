@@ -27,6 +27,7 @@ class BookingState(rx.State):
 
     def set_selected_date(self, value: str):
         self.selected_date = value
+        self.selected_times = []
         print(self.selected_date)
 
     async def submit_booking(self):
@@ -55,6 +56,17 @@ class BookingState(rx.State):
             self.end_date = ""
             return rx.redirect("/invite")
         else:
+            payload = {
+                "resource_id" : int(resource_id),
+                "start_time" : start_time,
+                "end_time" : end_time,
+                "guests" : [],
+            }
+            res = requests.post(
+                "http://localhost:8000/bookings/",
+                json=payload,
+                headers={"Authorization": f"Bearer {booking_state.token}"}
+            )
             self.selected_times = []
             self.selected_date = date.today()
             self.start_date = ""
@@ -120,13 +132,14 @@ class BookingState(rx.State):
             self.selected_date = str(date.today()) 
         today = str(self.selected_date).split("-")
         formatted_date = self.datetime_format(today)
+        print(formatted_date)
 
         dashboard_state = await self.get_state(State)
         res = requests.get(
             f"http://localhost:8000/resources/{booking_id}?date={formatted_date}",
             headers={"Authorization": f"Bearer {dashboard_state.token}"}
         )
-        print(res.json())
+        # print(res.json())
         if res.status_code == 200:
             data = res.json()
             self.resource = self.data_to_resource(data)

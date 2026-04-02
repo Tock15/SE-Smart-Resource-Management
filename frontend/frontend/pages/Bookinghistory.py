@@ -12,6 +12,8 @@ class Timeslot(rx.Base):
 class Resource(rx.Base):
     name: str = ""
     type: str = ""
+    room_no: str | None = None
+    locker_no: str | None = None
 
 
 class Booking(rx.Base):
@@ -19,8 +21,6 @@ class Booking(rx.Base):
     resource: Resource = Resource()
     timeslot: Timeslot = Timeslot()
     status: str = ""
-    room_no: str = ""
-    locker_no: str = ""
 
 
 class MyState(rx.State):
@@ -75,13 +75,13 @@ def booking_row(item: Booking) -> rx.Component:
             rx.cond(
                 item.resource.type == "coworking_space",
                 rx.text(
-                    item.resource.name + " (" + item.room_no + ")",
+                    item.resource.name + " (" + item.resource.room_no + ")",
                     color="black",
                 ),
                 rx.cond(
-                    item.resource.type == "locker",
+                    item["resource"]["type"] == "locker",
                     rx.text(
-                        item.resource.name + " (" + item.locker_no + ")",
+                        item.resource.name + " (" + item.resource.locker_no + ")",
                         color="black",
                     ),
                     rx.text(item.resource.name, color="black"),
