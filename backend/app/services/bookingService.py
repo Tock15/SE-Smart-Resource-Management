@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import and_, or_
 from app.models.booking import Booking, Timeslot, BookingStatus
 from app.models.resource import Resource
-from app.models.user import User
+from app.models.user import Student, User
 from fastapi import HTTPException, status
 
 
@@ -118,3 +118,10 @@ class BookingService:
         db.commit()
         db.refresh(booking)
         return booking
+    @staticmethod
+    def findUserByStudentId(db: Session, student_id: str):
+        student = db.query(Student).filter(Student.student_id == student_id).first()
+        if student:
+            return student
+        return None
+        
