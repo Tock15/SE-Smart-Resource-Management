@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy.orm import relationship
 from app.db.base import Base
 from sqlalchemy.sql import func
 
@@ -11,6 +12,8 @@ class Resource(Base):
     image_url = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    bookings = relationship("Booking", back_populates="resource")
 
     __mapper_args__ = {
         "polymorphic_identity": "resource",

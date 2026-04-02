@@ -107,6 +107,9 @@ async def get_booking(
 
 @router.get("/existing/{student_id}", response_model=UserResponse)
 async def get_existing_user(student_id: str, db: Session = Depends(get_db)):
-    return BookingService.findUserByStudentId(db, student_id)
+    res = BookingService.findUserByStudentId(db, student_id)
+    if not res:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    return res
 
 
