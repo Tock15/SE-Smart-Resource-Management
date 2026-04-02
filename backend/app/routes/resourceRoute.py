@@ -72,13 +72,7 @@ async def list_equipment(db: Session = Depends(get_db)):
 
 
 @router.get("/{resource_id}", response_model=viewIndividualResource)
-async def get_resource(resource_id: int, date: str = None, db: Session = Depends(get_db)):
-    try:
-        target_date = datetime.strptime(date, "%d-%m-%Y").date()
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid date format. Use DD-MM-YYYY")
-    except TypeError:
-        target_date = None
+async def get_resource(resource_id: int, date: str, db: Session = Depends(get_db)):
     
     # Query resource and filter by ID
     resource = db.query(Resource).filter(Resource.resource_id == resource_id).first()
@@ -87,6 +81,10 @@ async def get_resource(resource_id: int, date: str = None, db: Session = Depends
     
     if resource.type == "coworking_space":
         # Specifically fetch CoWorkingSpace to access its specific fields and bookings
+        try:
+            target_date = datetime.strptime(date, "%d-%m-%Y").date()
+        except ValueError:
+            raise HTTPException(status_code=400, detail="For coworking, use DD-MM-YYYY")
         resource = db.query(CoWorkingSpace).filter(CoWorkingSpace.resource_id == resource_id).first()
         
         # Filter bookings by date and ensure user role is accessible
@@ -101,8 +99,23 @@ async def get_resource(resource_id: int, date: str = None, db: Session = Depends
         result.bookings = bookings_on_date
         return result
     else:
-        # For other resources, ensure user_role is attached to any existing bookings
-        for b in resource.bookings:
+        # Logic for Month-Year (MM-YYYY)
+        try:
+            # Parse to the first day of that month
+            target_month = datetime.strptime(date, "%m-%Y")
+        except ValueError:
+            raise HTTPException(status_code=400, detail="For this resource, use MM-YYYY")
+
+        bookings_in_month = [
+            b for b in resource.bookings 
+            if b.timeslot.start_time.month == target_month.month 
+            and b.timeslot.start_time.year == target_month.year
+        ]
+
+        for b in bookings_in_month:
             b.user_role = b.user.role
-        return viewIndividualResource.from_orm(resource)
+
+        result = viewIndividualResource.from_attributes(resource)
+        result.bookings = bookings_in_month
+        return result
     
