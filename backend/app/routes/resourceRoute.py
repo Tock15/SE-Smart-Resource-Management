@@ -26,9 +26,17 @@ class viewBookingForResource(BaseModel):
     booking_id: int
     user_id: int
     status: str
+    user_role : str
     timeslot: TimeslotResponse
+
     class Config:
         from_attributes = True
+    @classmethod
+    def from_orm(cls, obj):
+        data = super().model_validate(obj)
+        data.user_role = obj.user.role
+        return data
+    
 class viewIndividualResource(viewResource):
     bookings: list[viewBookingForResource] = []
 
@@ -72,19 +80,29 @@ async def get_resource(resource_id: int, date: str = None, db: Session = Depends
     except TypeError:
         target_date = None
     
+    # Query resource and filter by ID
     resource = db.query(Resource).filter(Resource.resource_id == resource_id).first()
     if not resource:
         raise HTTPException(status_code=404, detail="Resource not found")
-    type = resource.type
-    if type == "coworking_space":
+    
+    if resource.type == "coworking_space":
+        # Specifically fetch CoWorkingSpace to access its specific fields and bookings
         resource = db.query(CoWorkingSpace).filter(CoWorkingSpace.resource_id == resource_id).first()
-        bookings_on_date = [
-            b for b in resource.bookings 
-            if b.timeslot.start_time.date() == target_date or b.timeslot.end_time.date() == target_date
-        ]
+        
+        # Filter bookings by date and ensure user role is accessible
+        bookings_on_date = []
+        for b in resource.bookings:
+            if b.timeslot.start_time.date() == target_date or b.timeslot.end_time.date() == target_date:
+                # Attach the role directly to the booking object for the response model to pick up
+                b.user_role = b.user.role 
+                bookings_on_date.append(b)
+        
         result = viewIndividualResource.from_orm(resource)
         result.bookings = bookings_on_date
         return result
     else:
+        # For other resources, ensure user_role is attached to any existing bookings
+        for b in resource.bookings:
+            b.user_role = b.user.role
         return viewIndividualResource.from_orm(resource)
     

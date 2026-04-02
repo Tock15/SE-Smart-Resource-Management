@@ -50,6 +50,20 @@ def init_db():
                 db.add(new_student)
             else:
                 print(f"Student{i} already exists, skipping...")
+        # seed teacher account
+        teacher_exists = db.query(user.User).filter_by(username="teacher1").first()
+        if not teacher_exists:
+            print("Seeding Teacher...")
+            new_teacher = user.Teacher(
+                username="teacher1",
+                email="teacher1@gmail.com",
+                hashed_password=AuthService.hash_password("password"),
+                role="teacher"
+            )
+            db.add(new_teacher)
+        else:
+            print("Teacher1 already exists, skipping...")
+        
 
        # 3. Seed Co-Working Spaces
         # Space 1: Innovation Hub

@@ -22,6 +22,7 @@ class TimeslotResponse(BaseModel):
 class ResourceResponse(BaseModel):
     resource_id: int
     name: str
+    type: str
     
     class Config:
         from_attributes = True
@@ -112,4 +113,18 @@ async def get_existing_user(student_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     return res
 
-
+@router.patch("/{booking_id}/cancel")
+async def cancel_booking(
+    booking_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    booking = BookingService.get_booking(db, booking_id)
+    if not booking:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found")
+    if booking.user_id != current_user.user_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to cancel this booking")
+    success = BookingService.cancel_booking(db, booking_id)
+    if not success:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found")
+    return {"detail": "Booking cancelled successfully"}
