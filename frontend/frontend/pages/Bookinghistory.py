@@ -1,15 +1,21 @@
 import reflex as rx
 from .sidebar import SidebarState, sidebar
 import requests
+from frontend.state import State
+
+
 class MyState(rx.State):
     data: list[dict] = []
     search_query: str = ""
 
-    def get_data(self):
-        res = requests.get("http://127.0.0.1:8000/resources/coworking-spaces")
+    async def get_data(self):
+        dashboard_state = await self.get_state(State)
+        res = requests.get("http://127.0.0.1:8000/bookings/",
+            headers={"Authorization": f"Bearer {dashboard_state.token}"}
+        )
         if res.status_code == 200:
             self.data = res.json()
-            
+
     def set_search(self, value: str):
         self.search_query = value
 
@@ -21,6 +27,81 @@ class MyState(rx.State):
             item for item in self.data
             if self.search_query.lower() in item["name"].lower()
         ]
+
+    async def authorization(self):
+        dashboard_state = await self.get_state(State)
+        if dashboard_state.user_check():
+            self.get_data()
+            print(self.get_data)
+        else:
+            return rx.redirect("/login")
+
+
+def booking_row(item: dict) -> rx.Component:
+    return rx.table.row(
+        rx.table.cell(item.get("resource_id", ""),
+            color="black"),
+        rx.table.cell(item.get("name", ""),
+            color="black"),
+        rx.table.cell(item.get("room_no", ""),
+            color="black"),
+        rx.table.cell(
+            rx.cond(
+                item.get("status") == "pending",
+                rx.badge(
+                    item.get("type", ""),
+                    color_scheme="yellow",
+                    border_radius="20px",
+                ),
+            ),
+            rx.cond(
+                item.get("status") == "approved",
+                rx.badge(
+                    item.get("type", ""),
+                    color_scheme="green",
+                    border_radius="20px",
+                ),
+            ),
+            rx.cond(
+                item.get("status") == "rejected",
+                rx.badge(
+                    item.get("type", ""),
+                    color_scheme="red",
+                    border_radius="20px",
+                ),
+            ),
+            rx.cond(
+                item.get("status") == "cancelled",
+                rx.badge(
+                    item.get("type", ""),
+                    color_scheme="red",
+                    border_radius="20px",
+                ),
+            ),
+            rx.cond(
+                item.get("status") == "overriden",
+                rx.badge(
+                    item.get("type", ""),
+                    color_scheme="purple",
+                    border_radius="20px",
+                ),
+            ),
+        ),
+        rx.table.cell(
+            rx.badge(
+                item.get("type", ""),
+                color_scheme="blue",
+                border_radius="20px",
+            )
+        ),
+        rx.table.cell(
+            rx.text(
+                f'{item.get("min_guests", 0)} - {item.get("capacity", 0)}',
+            )
+        ),
+        border_bottom="1px solid #f0f0f0",
+        color="black"
+        )
 def navbar() -> rx.Component:
     return rx.box(
         sidebar(),
@@ -102,6 +183,8 @@ def navbar() -> rx.Component:
         top="0",
         z_index="100",
     )
+
+@rx.page(route="/history", on_load=MyState.authorization)
 def orders_page() -> rx.Component:
     return rx.box(
         navbar(),
@@ -112,58 +195,21 @@ def orders_page() -> rx.Component:
                 rx.table.root(
                     rx.table.header(
                         rx.table.row(
-                            rx.table.column_header_cell("Booking ID"),
-                            rx.table.column_header_cell("Resource"),
-                            rx.table.column_header_cell("Date"),
+                            rx.table.column_header_cell("Resource ID"),
+                            rx.table.column_header_cell("Name"),
+                            rx.table.column_header_cell("Room No"),
                             rx.table.column_header_cell("Status"),
-                            rx.table.column_header_cell("Actions"),
+                            rx.table.column_header_cell("Type"),
+                            rx.table.column_header_cell("Guests"),
                             bg="#1E88E5",
                             color="white",
                         ),
                     ),
                     rx.table.body(
-                        rx.table.row(
-                            rx.table.cell(rx.text("#10001", color="#1E88E5", font_weight="500")),
-                            rx.table.cell("Innovation Hub"),
-                            rx.table.cell("Jan 02, 2025"),
-                            rx.table.cell(rx.badge("● Completed", color_scheme="green", border_radius="20px")),
-                            rx.table.cell(
-                                rx.hstack(
-                                    rx.icon("eye", size=16, color="gray", cursor="pointer"),
-                                    rx.icon("trash-2", size=16, color="#e53e3e", cursor="pointer"),
-                                    spacing="3",
-                                )
-                            ),
-                            border_bottom="1px solid #f0f0f0",
-                        ),
-                        rx.table.row(
-                            rx.table.cell(rx.text("#10002", color="#1E88E5", font_weight="500")),
-                            rx.table.cell("Creative Corner"),
-                            rx.table.cell("Feb 10, 2025"),
-                            rx.table.cell(rx.badge("● On Hold", color_scheme="yellow", border_radius="20px")),
-                            rx.table.cell(
-                                rx.hstack(
-                                    rx.icon("eye", size=16, color="gray", cursor="pointer"),
-                                    rx.icon("trash-2", size=16, color="#e53e3e", cursor="pointer"),
-                                    spacing="3",
-                                )
-                            ),
-                            border_bottom="1px solid #f0f0f0",
-                        ),
-                        rx.table.row(
-                            rx.table.cell(rx.text("#10003", color="#1E88E5", font_weight="500")),
-                            rx.table.cell("West Wing Locker"),
-                            rx.table.cell("Mar 05, 2025"),
-                            rx.table.cell(rx.badge("● Cancelled", color_scheme="gray", border_radius="20px")),
-                            rx.table.cell(
-                                rx.hstack(
-                                    rx.icon("eye", size=16, color="gray", cursor="pointer"),
-                                    rx.icon("trash-2", size=16, color="#e53e3e", cursor="pointer"),
-                                    spacing="3",
-                                )
-                            ),
-                            border_bottom="1px solid #f0f0f0",
-                        ),
+                        rx.foreach(
+                            MyState.filtered_data,
+                            booking_row,
+                        )
                     ),
                     width="100%",
                     border="1px solid #e0e0e0",
