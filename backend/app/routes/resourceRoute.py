@@ -1,6 +1,6 @@
 from fastapi import Depends, HTTPException, status, APIRouter
 from typing import Annotated
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 from sqlalchemy.orm import Session
 from app.db.session import SessionLocal
 from app.models.resource import CoWorkingSpace, Locker, Equipment, Resource
@@ -26,15 +26,18 @@ class viewBookingForResource(BaseModel):
     booking_id: int
     user_id: int
     status: str
-    user_role : str
     timeslot: TimeslotResponse
+    user_role: str | None = None 
 
     class Config:
         from_attributes = True
+
+    @model_validator(mode='before')
     @classmethod
-    def from_orm(cls, obj):
-        data = super().model_validate(obj)
-        data.user_role = obj.user.role
+    def get_user_role(cls, data):
+        # If it's an ORM object, extract the role from the user relationship
+        if hasattr(data, 'user') and data.user:
+            data.user_role = data.user.role
         return data
     
 class viewIndividualResource(viewResource):
@@ -73,49 +76,32 @@ async def list_equipment(db: Session = Depends(get_db)):
 
 @router.get("/{resource_id}", response_model=viewIndividualResource)
 async def get_resource(resource_id: int, date: str, db: Session = Depends(get_db)):
-    
-    # Query resource and filter by ID
     resource = db.query(Resource).filter(Resource.resource_id == resource_id).first()
     if not resource:
         raise HTTPException(status_code=404, detail="Resource not found")
     
-    if resource.type == "coworking_space":
-        # Specifically fetch CoWorkingSpace to access its specific fields and bookings
-        try:
+    # Standardize result object
+    result = viewIndividualResource.model_validate(resource)
+    filtered_bookings = []
+
+    try:
+        if resource.type == "coworking_space":
             target_date = datetime.strptime(date, "%d-%m-%Y").date()
-        except ValueError:
-            raise HTTPException(status_code=400, detail="For coworking, use DD-MM-YYYY")
-        resource = db.query(CoWorkingSpace).filter(CoWorkingSpace.resource_id == resource_id).first()
-        
-        # Filter bookings by date and ensure user role is accessible
-        bookings_on_date = []
-        for b in resource.bookings:
-            if b.timeslot.start_time.date() == target_date or b.timeslot.end_time.date() == target_date:
-                # Attach the role directly to the booking object for the response model to pick up
-                b.user_role = b.user.role 
-                bookings_on_date.append(b)
-        
-        result = viewIndividualResource.from_orm(resource)
-        result.bookings = bookings_on_date
-        return result
-    else:
-        # Logic for Month-Year (MM-YYYY)
-        try:
-            # Parse to the first day of that month
+            # Use a list comprehension to avoid manual attribute injection
+            filtered_bookings = [
+                b for b in resource.bookings 
+                if b.timeslot.start_time.date() == target_date
+            ]
+        else:
             target_month = datetime.strptime(date, "%m-%Y")
-        except ValueError:
-            raise HTTPException(status_code=400, detail="For this resource, use MM-YYYY")
+            filtered_bookings = [
+                b for b in resource.bookings 
+                if b.timeslot.start_time.month == target_month.month 
+                and b.timeslot.start_time.year == target_month.year
+            ]
+    except ValueError:
+        detail = "Use DD-MM-YYYY for coworking" if resource.type == "coworking_space" else "Use MM-YYYY"
+        raise HTTPException(status_code=400, detail=detail)
 
-        bookings_in_month = [
-            b for b in resource.bookings 
-            if b.timeslot.start_time.month == target_month.month 
-            and b.timeslot.start_time.year == target_month.year
-        ]
-
-        for b in bookings_in_month:
-            b.user_role = b.user.role
-
-        result = viewIndividualResource.from_attributes(resource)
-        result.bookings = bookings_in_month
-        return result
-    
+    result.bookings = filtered_bookings
+    return result
