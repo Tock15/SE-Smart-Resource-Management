@@ -47,6 +47,20 @@ class MyState(rx.State):
                 )
                 for item in raw
             ]
+    async def cancel(self, booking_id):
+        booking_state = await self.get_state(State)
+        res = requests.patch(
+            f"http://127.0.0.1:8000/bookings/{booking_id}/cancel",
+            headers={"Authorization": f"Bearer {booking_state.token}"}
+        )
+
+        if res.status_code == 200:
+            try:
+                return await self.get_data()
+            except ValueError:
+                print("Response is not valid JSON")
+        else:
+            print("Request failed:", res.status_code)
 
     def set_search(self, value: str):
         self.search_query = value
@@ -118,6 +132,7 @@ def booking_row(item: Booking) -> rx.Component:
         ),
         rx.table.cell(
             rx.button("Cancel", color_scheme="red", size="1"),
+            on_click=lambda : MyState.cancel(item["booking_id"])
         ),
         border_bottom="1px solid #f0f0f0",
         color="black",
@@ -243,7 +258,7 @@ def orders_page() -> rx.Component:
                     overflow="hidden",
                 ),
                 rx.hstack(
-                    rx.text("Results: 1-3 per 3", font_size="13px", color="gray"),
+                    rx.spacer(),
                     rx.spacer(),
                     rx.hstack(
                         rx.button("‹", variant="outline", size="2"),

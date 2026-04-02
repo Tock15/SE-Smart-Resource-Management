@@ -25,10 +25,11 @@ class BookingState(rx.State):
         else:
             self.selected_times.append(time)
 
-    def set_selected_date(self, value: str):
+    async def set_selected_date(self, value: str):
         self.selected_date = value
         self.selected_times = []
         print(self.selected_date)
+        await self.fetch_resource()
 
     async def submit_booking(self):
         booking_state = await self.get_state(State)
@@ -141,10 +142,13 @@ class BookingState(rx.State):
         )
         # print(res.json())
         if res.status_code == 200:
-            data = res.json()
-            self.resource = self.data_to_resource(data)
+            try:
+                data = res.json()
+                self.resource = self.data_to_resource(data)
+            except ValueError:
+                print("Response is not valid JSON")
         else:
-            return rx.redirect("/")
+            print("Request failed:", res.status_code)
 
     async def authorization(self):
         dashboard_state = await self.get_state(State)
