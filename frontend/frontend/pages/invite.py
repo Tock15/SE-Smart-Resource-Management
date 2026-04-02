@@ -1,9 +1,12 @@
 import reflex as rx
 from .sidebar import SidebarState, sidebar
+from frontend.state import State
+import requests
 
 class InviteState(rx.State):
     student_id_input: str = ""
     invited_list: list[dict] = []
+    min_guests : int = 0
 
     def set_student_id(self, value: str):
         self.student_id_input = value
@@ -11,8 +14,16 @@ class InviteState(rx.State):
     def add_invite(self):
         ids = [s["id"] for s in self.invited_list]
         if self.student_id_input and self.student_id_input not in ids:
-            self.invited_list.append({"id": self.student_id_input, "status": "Pending"})
-            self.student_id_input = ""
+            res = requests.get(
+                f"http://localhost:8000/bookings/existing/{self.student_id_input}"
+            )
+            data = res.json()
+            if res.status_code == 200:
+                username = data["username"]
+                self.invited_list.append({"id": self.student_id_input, "name" : username ,"status": "Pending"})
+                self.student_id_input = ""
+            else:
+                print(data)
 
     def remove_invite(self, student_id: str):
         self.invited_list = [s for s in self.invited_list if s["id"] != student_id]
@@ -23,6 +34,12 @@ class InviteState(rx.State):
             if s["id"] == student_id else s
             for s in self.invited_list
         ]
+
+    async def authorization(self):
+        invite_state = await self.get_state(State)
+        self.min_guests = invite_state.booking_info["min_guests"]
+        if not invite_state.user_check():
+            return rx.redirect("/login")
 
 
 def navbar() -> rx.Component:
@@ -98,7 +115,7 @@ def invited_row(student: dict) -> rx.Component:
             flex_shrink="0",
         ),
         rx.vstack(
-            rx.text(student["id"], font_size="14px", color="#111", font_weight="600"),
+            rx.text(student["name"], font_size="14px", color="#111", font_weight="600"),
             rx.text("Student", font_size="12px", color="#aaa"),
             spacing="0",
             align="start",
@@ -120,7 +137,7 @@ def invited_row(student: dict) -> rx.Component:
         spacing="3",
     )
 
-
+@rx.page(route="/invite", on_load=InviteState.authorization)
 def invite_page() -> rx.Component:
     return rx.box(
         navbar(),
@@ -230,12 +247,51 @@ def invite_page() -> rx.Component:
                 max_width="560px",
                 box_shadow="0 4px 32px rgba(30,136,229,0.10), 0 1px 4px rgba(0,0,0,0.06)",
             ),
+            rx.flex(
+                rx.box(
+                    rx.button(
+                        f"Proceed",
+                        is_disabled=InviteState.invited_list.length() + 1 < InviteState.min_guests,
+                        bg=rx.cond(
+                            InviteState.invited_list.length()+1 < InviteState.min_guests,
+                            "#616161",
+                            "#62C015",
+                        ),
+                        color="white",
+                        border_radius="10px",
+                        padding="11px 22px",
+                        font_size="20px",
+                        font_weight="900",
+                        _hover=rx.cond(
+                            InviteState.invited_list.length()+1 < InviteState.min_guests,
+                            {"bg": "#616161"},
+                            {"bg": "#56A912"},
+                        ),
+                        cursor="pointer",
+                        white_space="nowrap",
+                        height="60px",
+                        width="200px"
+                    ),
+                    rx.cond(
+                        InviteState.invited_list.length() + 1 < InviteState.min_guests,
+                        rx.text(f"Need {InviteState.min_guests - (InviteState.invited_list.length() + 1)} more people to book",
+                            color="red"
+                        )
+                    )
+                ),
+                justify="center",
+                margin_top="20px",
+                width="100%",
+                flex="1",
+            ),
             justify="center",
-            align="start",
+            align="start", # <- HERE
+            align_items="center",
             padding="48px 24px",
             bg="#f0f4fa",
             min_height="calc(100vh - 60px)",
             width="100%",
+            direction="column"
         ),
         margin="0",
         padding="0",
