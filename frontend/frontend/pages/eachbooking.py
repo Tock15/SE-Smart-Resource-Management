@@ -2,12 +2,13 @@ import reflex as rx
 from .sidebar import SidebarState, sidebar
 import requests
 from frontend.state import State
+from datetime import date
 
 
 class BookingState(rx.State):
     resource: dict = {}
     selected_times: list[str] = []
-    selected_date: str = ""
+    selected_date: str = date.today()
     note: str = ""
     start_date: str = ""
     end_date: str = ""
@@ -26,6 +27,7 @@ class BookingState(rx.State):
 
     def set_selected_date(self, value: str):
         self.selected_date = value
+        print(self.selected_date)
 
     async def submit_booking(self):
         booking_state = await self.get_state(State)
@@ -41,14 +43,6 @@ class BookingState(rx.State):
             end_time = start_time
         
 
-        payload = {
-            "resource_id" : int(resource_id),
-            "start_time" : start_time,
-            "end_time" : end_time,
-            "guests" : guests
-        }
-
-        print("Click1!")
         # send booking information to state
         booking_state.set_booking_info(int(resource_id), start_time, end_time)
 
@@ -66,16 +60,25 @@ class BookingState(rx.State):
             "locker_no": data.get("locker_no", ""),
         }
 
+    def datetime_format(self, date_list):
+        return f"{date_list[2]}-{date_list[1]}-{date_list[0]}"
+
     async def fetch_resource(self):
         booking_id = self.router.page.params.get("booking_id", "")
         if not booking_id:
             return rx.redirect("/")
+        
+        if self.selected_date == "":
+            self.selected_date = str(date.today()) 
+        today = str(self.selected_date).split("-")
+        formatted_date = self.datetime_format(today)
 
         dashboard_state = await self.get_state(State)
         res = requests.get(
-            f"http://localhost:8000/resources/{booking_id}",
+            f"http://localhost:8000/resources/{booking_id}?date={formatted_date}",
             headers={"Authorization": f"Bearer {dashboard_state.token}"}
         )
+        print(res.json())
         if res.status_code == 200:
             data = res.json()
             self.resource = self.data_to_resource(data)
