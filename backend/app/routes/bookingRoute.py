@@ -23,6 +23,8 @@ class ResourceResponse(BaseModel):
     resource_id: int
     name: str
     type: str
+    room_no: str | None = None
+    locker_no: str | None = None
     
     class Config:
         from_attributes = True
