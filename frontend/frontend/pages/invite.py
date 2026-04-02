@@ -1,6 +1,7 @@
 import reflex as rx
 from .sidebar import SidebarState, sidebar
 from frontend.state import State
+import requests
 
 class InviteState(rx.State):
     student_id_input: str = ""
@@ -12,8 +13,16 @@ class InviteState(rx.State):
     def add_invite(self):
         ids = [s["id"] for s in self.invited_list]
         if self.student_id_input and self.student_id_input not in ids:
-            self.invited_list.append({"id": self.student_id_input, "status": "Pending"})
-            self.student_id_input = ""
+            res = requests.get(
+                f"http://localhost:8000/bookings/existing/{self.student_id_input}"
+            )
+            data = res.json()
+            if res.status_code == 200:
+                username = data["username"]
+                self.invited_list.append({"id": self.student_id_input, "name" : username ,"status": "Pending"})
+                self.student_id_input = ""
+            else:
+                print(data)
 
     def remove_invite(self, student_id: str):
         self.invited_list = [s for s in self.invited_list if s["id"] != student_id]
@@ -105,7 +114,7 @@ def invited_row(student: dict) -> rx.Component:
             flex_shrink="0",
         ),
         rx.vstack(
-            rx.text(student["id"], font_size="14px", color="#111", font_weight="600"),
+            rx.text(student["name"], font_size="14px", color="#111", font_weight="600"),
             rx.text("Student", font_size="12px", color="#aaa"),
             spacing="0",
             align="start",
