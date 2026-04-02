@@ -56,6 +56,8 @@ class InviteState(rx.State):
         print(res.json())
         if res.status_code == 201:
             main_state.reset_booking_info()
+            self.student_id_input = ""
+            self.invited_list = []
             return rx.redirect("/")
         else:
             print(res.json())

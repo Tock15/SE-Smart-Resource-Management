@@ -35,18 +35,12 @@ class BookingState(rx.State):
 
         resource_id = self.router.page.params.get("booking_id", "")
 
-        selected_times = []
-        selected_date = date.today()
-        start_date = ""
-        end_date = ""
-
         if self.resource["type"] == "coworking_space":
             guests = [int(token_data["message"]["id"])]
 
             if len(self.selected_times) == 0:
                 return  # no time selected, do nothing
 
-            # Sort selected times and pick first start and last end
             sorted_times = sorted(self.selected_times)
             first_start = sorted_times[0].split(" - ")[0]   # e.g. "08:00"
             last_end = sorted_times[-1].split(" - ")[1]      # e.g. "10:00"
@@ -55,8 +49,16 @@ class BookingState(rx.State):
             end_time = f"{self.selected_date}T{last_end}:00"
 
             booking_state.set_booking_info(int(resource_id), start_time, end_time, self.resource["min_guests"])
+            self.selected_times = []
+            self.selected_date = date.today()
+            self.start_date = ""
+            self.end_date = ""
             return rx.redirect("/invite")
         else:
+            self.selected_times = []
+            self.selected_date = date.today()
+            self.start_date = ""
+            self.end_date = ""
             return rx.redirect("/")
 
     def data_to_resource(self, data):
@@ -94,6 +96,17 @@ class BookingState(rx.State):
                         booked.append(slot)
                         break
         return booked
+    @rx.var
+    def times_are_continuous(self) -> bool:
+        if len(self.selected_times) <= 1:
+            return len(self.selected_times) == 1
+        sorted_times = sorted(self.selected_times)
+        for i in range(len(sorted_times) - 1):
+            current_end = sorted_times[i].split(" - ")[1]
+            next_start = sorted_times[i + 1].split(" - ")[0]
+            if current_end != next_start:
+                return False
+        return True
 
     def datetime_format(self, date_list):
         return f"{date_list[2]}-{date_list[1]}-{date_list[0]}"
@@ -381,15 +394,28 @@ def booking_page() -> rx.Component:
                         rx.button(
                             "Confirm Booking",
                             on_click=BookingState.submit_booking,
-                            bg="#1E88E5",
+                            is_disabled=~BookingState.times_are_continuous,
+                            bg=rx.cond(
+                                BookingState.times_are_continuous,
+                                "#1E88E5",
+                                "#90CAF9",  # faded blue when disabled
+                            ),
                             color="white",
                             border_radius="8px",
                             padding="12px 0",
                             font_size="14px",
                             font_weight="600",
                             width="100%",
-                            _hover={"bg": "#1565C0"},
-                            cursor="pointer",
+                            _hover=rx.cond(
+                                BookingState.times_are_continuous,
+                                {"bg": "#1565C0"},
+                                {},
+                            ),
+                            cursor=rx.cond(
+                                BookingState.times_are_continuous,
+                                "pointer",
+                                "not-allowed",
+                            ),
                         ),
 
                         align="start",
