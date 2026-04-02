@@ -15,6 +15,7 @@ class State(rx.State):
     role : str = ""
     token : str = ""
     token_type : str = ""
+    booking_info : dict = {}
 
     def set_user_data(self, username=None, role=None, token=None, token_type=None):
         if username is not None:
@@ -25,6 +26,12 @@ class State(rx.State):
             self.token = token
         if token_type is not None:
             self.token_type = token_type
+    def set_booking_info(self, resource_id, start_time, end_time, guests = []):
+        self.booking_info["resource_id"] = resource_id
+        self.booking_info["start_time"] = start_time
+        self.booking_info["end_time"] = end_time
+        self.booking_info["guests"] = guests
+
     def logout(self):
         self.username = ""
         self.role = ""

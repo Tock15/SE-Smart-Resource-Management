@@ -1,5 +1,6 @@
 import reflex as rx
 from .sidebar import SidebarState, sidebar
+from frontend.state import State
 
 class InviteState(rx.State):
     student_id_input: str = ""
@@ -23,6 +24,12 @@ class InviteState(rx.State):
             if s["id"] == student_id else s
             for s in self.invited_list
         ]
+
+    async def authorization(self):
+        invite_state = await self.get_state(State)
+        print(invite_state.booking_info)
+        if not invite_state.user_check():
+            return rx.redirect("/login")
 
 
 def navbar() -> rx.Component:
@@ -120,7 +127,7 @@ def invited_row(student: dict) -> rx.Component:
         spacing="3",
     )
 
-
+@rx.page(route="/invite", on_load=InviteState.authorization)
 def invite_page() -> rx.Component:
     return rx.box(
         navbar(),

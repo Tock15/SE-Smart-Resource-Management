@@ -28,26 +28,31 @@ class BookingState(rx.State):
         self.selected_date = value
 
     async def submit_booking(self):
-        dashboard_state = await self.get_state(State)
-        token_data = dashboard_state.verify_token()
+        booking_state = await self.get_state(State)
+        token_data = booking_state.verify_token()
+
         resource_id = self.router.page.params.get("booking_id", "")
+        start_time = self.start_date
+        end_time = self.end_date
+        guests = []
+        if self.resource["type"] == "coworking_space" : 
+            guests = [int(token_data["message"]["id"])]
+            start_time = self.selected_date
+            end_time = start_time
+        
+
         payload = {
             "resource_id" : int(resource_id),
-            "start_time" : self.start_date,
-            "end_time" : self.end_date,
-            "guests" : []
+            "start_time" : start_time,
+            "end_time" : end_time,
+            "guests" : guests
         }
-        print(payload)
-        res = requests.post(
-            f"http://localhost:8000/bookings/",
-            headers={"Authorization": f"Bearer {dashboard_state.token}"},
-            json=payload
-        )
 
-        if res.status_code == 201:
-            return rx.redirect("/")
-        else:
-            print(res.json())
+        print("Click1!")
+        # send booking information to state
+        booking_state.set_booking_info(int(resource_id), start_time, end_time)
+
+        return rx.redirect("/invite")
 
     def data_to_resource(self, data):
         return {
