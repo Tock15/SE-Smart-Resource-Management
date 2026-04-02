@@ -30,11 +30,15 @@ class BookingState(rx.State):
         print(self.selected_date)
 
     async def submit_booking(self):
-        from datetime import datetime
         booking_state = await self.get_state(State)
         token_data = booking_state.verify_token()
 
         resource_id = self.router.page.params.get("booking_id", "")
+
+        selected_times = []
+        selected_date = date.today()
+        start_date = ""
+        end_date = ""
 
         if self.resource["type"] == "coworking_space":
             guests = [int(token_data["message"]["id"])]
@@ -53,10 +57,7 @@ class BookingState(rx.State):
             booking_state.set_booking_info(int(resource_id), start_time, end_time, self.resource["min_guests"])
             return rx.redirect("/invite")
         else:
-            start_time = f"{self.start_date}T00:00:00"
-            end_time = f"{self.end_date}T23:59:59"
-            booking_state.set_booking_info(int(resource_id), start_time, end_time)
-            return rx.redirect("/invite")
+            return rx.redirect("/")
 
     def data_to_resource(self, data):
         return {

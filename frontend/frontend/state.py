@@ -31,6 +31,8 @@ class State(rx.State):
         self.booking_info["start_time"] = start_time
         self.booking_info["end_time"] = end_time
         self.booking_info["min_guests"] = min_guests
+    def reset_booking_info(self):
+        self.booking_info = {}
 
     def logout(self):
         self.username = ""

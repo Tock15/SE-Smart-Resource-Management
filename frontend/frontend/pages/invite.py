@@ -11,16 +11,19 @@ class InviteState(rx.State):
     def set_student_id(self, value: str):
         self.student_id_input = value
 
-    def add_invite(self):
+    async def add_invite(self):
+        main_state = await self.get_state(State)
+        host_id = main_state.verify_token()["message"]["id"]
         ids = [s["id"] for s in self.invited_list]
         if self.student_id_input and self.student_id_input not in ids:
             res = requests.get(
                 f"http://localhost:8000/bookings/existing/{self.student_id_input}"
             )
             data = res.json()
-            if res.status_code == 200:
+            if res.status_code == 200 and host_id != data["user_id"]:
                 username = data["username"]
-                self.invited_list.append({"id": self.student_id_input, "name" : username ,"status": "Pending"})
+                user_id = data["user_id"]
+                self.invited_list.append({"id": self.student_id_input, "user_id": user_id, "name" : username ,"status": "Pending"})
                 self.student_id_input = ""
             else:
                 print(data)
@@ -35,11 +38,32 @@ class InviteState(rx.State):
             for s in self.invited_list
         ]
 
+    async def process_invite(self):
+        main_state = await self.get_state(State)
+        invite_state = main_state.booking_info
+        payload = {
+            "resource_id" : invite_state["resource_id"],
+            "start_time" : invite_state["start_time"],
+            "end_time" : invite_state["end_time"],
+            "guests" : [s["user_id"] for s in self.invited_list],
+        }
+        print(payload)
+        res = requests.post(
+            "http://localhost:8000/bookings/",
+            json=payload,
+            headers={"Authorization": f"Bearer {main_state.token}"}
+        )
+        print(res.json())
+        if res.status_code == 201:
+            main_state.reset_booking_info()
+            return rx.redirect("/")
+        else:
+            print(res.json())
     async def authorization(self):
         invite_state = await self.get_state(State)
-        self.min_guests = invite_state.booking_info["min_guests"]
         if not invite_state.user_check():
             return rx.redirect("/login")
+        self.min_guests = invite_state.booking_info["min_guests"]
 
 
 def navbar() -> rx.Component:
@@ -252,6 +276,7 @@ def invite_page() -> rx.Component:
                     rx.button(
                         f"Proceed",
                         is_disabled=InviteState.invited_list.length() + 1 < InviteState.min_guests,
+                        on_click=InviteState.process_invite,
                         bg=rx.cond(
                             InviteState.invited_list.length()+1 < InviteState.min_guests,
                             "#616161",
