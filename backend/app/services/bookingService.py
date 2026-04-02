@@ -130,7 +130,7 @@ class BookingService:
             if user_id:
                 query = query.filter(Booking.user_id == user_id)
                 
-        return query.order_by(Booking.created_at.desc()).all()
+        return query.order_by(Booking.created_at.asc()).all()
     @staticmethod
     def update_booking_status(db: Session, booking_id: int, status: BookingStatus):
         booking = db.query(Booking).filter(Booking.booking_id == booking_id).first()
