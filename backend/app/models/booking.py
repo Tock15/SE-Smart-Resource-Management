@@ -8,7 +8,7 @@ class BookingStatus(enum.Enum):
     APPROVED = "approved"
     REJECTED = "rejected"
     CANCELLED = "cancelled"
-    OVERRIDEN = "overriden"
+    OVERRIDDEN = "overridden"
 
 class Timeslot(Base):
     __tablename__ = "timeslots"

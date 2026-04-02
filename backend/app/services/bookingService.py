@@ -147,4 +147,11 @@ class BookingService:
         if student:
             return student
         return None
-        
+    @staticmethod
+    def cancel_booking(db: Session, booking_id: int):
+        booking = db.query(Booking).filter(Booking.booking_id == booking_id).first()
+        if not booking:
+            return False
+        booking.status = BookingStatus.CANCELLED
+        db.commit()
+        return True
