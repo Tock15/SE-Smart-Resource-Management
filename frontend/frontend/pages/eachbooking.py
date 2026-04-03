@@ -57,16 +57,19 @@ class BookingState(rx.State):
                     "end_time": end_time,
                     "guests": [user_id],
                 }
-                requests.post(
+                res = requests.post(
                     "http://localhost:8000/bookings/",
                     json=payload,
                     headers={"Authorization": f"Bearer {main_state.token}"}
                 )
-                self.selected_times = []
-                self.selected_date = str(date.today())
-                self.start_date = ""
-                self.end_date = ""
-                return rx.redirect("/")
+                if res.status_code == 200:
+                    self.selected_times = []
+                    self.selected_date = str(date.today())
+                    self.start_date = ""
+                    self.end_date = ""
+                    return rx.redirect("/")
+                else:
+                    print(res.json())
             else:
                 # Students go through the invite flow
                 main_state.set_booking_info(int(resource_id), start_time, end_time, self.resource["min_guests"])
