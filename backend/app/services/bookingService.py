@@ -30,6 +30,7 @@ class BookingService:
             raise HTTPException(status_code=404, detail="Resource not found")
 
         duration = end - start
+        requesting_user = db.query(User).filter(User.user_id == user_id).first()
 
         if resource.type == "coworking_space":
             # Rule: Max 4 hours, must be same day
@@ -42,7 +43,7 @@ class BookingService:
             total_attendees = len(guest_ids) + 1
             if total_attendees > resource.capacity:
                 raise HTTPException(status_code=400, detail="Capacity exceeded")
-            if total_attendees < resource.min_guests:
+            if total_attendees < resource.min_guests and requesting_user.role != "teacher":
                 raise HTTPException(
                     status_code=400, 
                     detail=f"This room requires at least {resource.min_guests} people. Please invite more guests."
@@ -67,7 +68,7 @@ class BookingService:
         
         conflicts = BookingService.check_availability(db, resource_id, start, end)
         if conflicts:
-            requesting_user = db.query(User).filter(User.user_id == user_id).first()
+            
             
             # PASS 1: Validation
             # Ensure every single conflict meets the criteria before changing anything
@@ -82,6 +83,7 @@ class BookingService:
                 )
                 
                 if not is_overrideable:
+                    print("HERE")
                     raise HTTPException(
                         status_code=400, 
                         detail="Resource is unavailable. One or more existing bookings cannot be overridden."
@@ -90,7 +92,7 @@ class BookingService:
             # PASS 2: Execution
             # If we reached here, it means ALL conflicts are overrideable
             for conflict in conflicts:
-                conflict.status = BookingStatus.OVERRIDEN
+                conflict.status = BookingStatus.OVERRIDDEN
                 # TODO: NotificationService.notify_overridden_user(conflict.user_id)
 
 
