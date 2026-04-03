@@ -62,7 +62,7 @@ class BookingState(rx.State):
                     json=payload,
                     headers={"Authorization": f"Bearer {main_state.token}"}
                 )
-                if res.status_code == 200:
+                if res.status_code == 201:
                     self.selected_times = []
                     self.selected_date = str(date.today())
                     self.start_date = ""
