@@ -32,7 +32,7 @@ class ResourceResponse(BaseModel):
 class UserResponse(BaseModel):
     user_id: int
     username: str
-    student_id: str
+    student_id: str | None = None
 
     class Config:
         from_attributes = True
