@@ -10,6 +10,7 @@ class BookingState(rx.State):
     selected_times: list[str] = []
     # YY:MM:DD
     selected_date: str = str(date.today())
+    today_date : str = str(date.today())
     start_date: str = ""
     end_date: str = ""
     current_user_role: str = ""
@@ -616,6 +617,7 @@ def booking_page() -> rx.Component:
                                 type="date",
                                 value=BookingState.selected_date,
                                 on_change=BookingState.set_selected_date,
+                                min=BookingState.today_date,
                                 border="1.5px solid #e0e0e0",
                                 border_radius="8px",
                                 padding="10px",
