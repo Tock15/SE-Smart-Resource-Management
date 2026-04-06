@@ -392,13 +392,15 @@ def time_button(time: str) -> rx.Component:
     # if user is teacher
     is_teacher = BookingState.is_teacher
 
+    is_passed = BookingState.passed_slots.contains(time)
+
     is_24hrs_ok = BookingState.over_24hrs_slots.contains(time)
     
 
     # A teacher can click this slot if it's only student-booked
     is_overridable = is_teacher & is_student_booked & is_24hrs_ok
     # A slot is hard-blocked when booked and 100% NOT overridable
-    is_blocked = is_booked & ~is_overridable
+    is_blocked = is_booked & ~is_overridable & is_passed
 
     return rx.box(
         rx.hstack(
