@@ -217,6 +217,28 @@ class BookingState(rx.State):
 
         return allowed_slots
     @rx.var
+    def passed_slots(self) -> list[str]:
+        passed = []
+        time_slots = [
+            "08:00 - 09:00", "09:00 - 10:00", "10:00 - 11:00", "11:00 - 12:00",
+            "12:00 - 13:00", "13:00 - 14:00", "14:00 - 15:00", "15:00 - 16:00",
+            "16:00 - 17:00", "17:00 - 18:00",
+        ]
+        if self.selected_date != self.today_date:
+            return []
+        
+        now = datetime.now()
+        for slot in time_slots:
+            end_time = slot.split(" - ")[1]   # e.g. "09:00"
+            slot_end_dt = datetime.strptime(
+                f"{self.selected_date} {end_time}",
+                "%Y-%m-%d %H:%M"
+            )
+            if slot_end_dt <= now:
+                passed.append(slot)
+
+        return passed
+    @rx.var
     def student_booked_slots(self) -> list[str]:
         """Returns time slots booked ONLY by students (no teacher overlap) — teacher-overridable."""
         student_booked = []
@@ -315,6 +337,12 @@ class BookingState(rx.State):
         if dashboard_state.user_check():
             token_data = dashboard_state.verify_token()
             self.current_user_role = token_data.get("message", {}).get("role", "")
+
+            # initilize
+            self.selected_date = str(date.today())
+            self.selected_times = []
+            self.start_date = ""
+            self.end_date = ""
             return await self.fetch_resource()
         else:
             return rx.redirect("/login")
