@@ -337,6 +337,8 @@ class BookingState(rx.State):
         if dashboard_state.user_check():
             token_data = dashboard_state.verify_token()
             self.current_user_role = token_data.get("message", {}).get("role", "")
+            if self.current_user_role == "admin":
+                return rx.redirect("/")
 
             # initilize
             self.selected_date = str(date.today())

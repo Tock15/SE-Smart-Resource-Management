@@ -306,7 +306,7 @@ def type_badge(resource_type: str) -> rx.Component:
         ("equipment", "purple"),
         "gray",
     )
-    return rx.badge(resource_type, color_scheme=color, variant="soft", radius="full")
+    return rx.badge(resource_type, color_scheme=color, variant="solid", radius="full")
 
 
 def filter_button(label: str, value: str) -> rx.Component:
@@ -560,7 +560,7 @@ def admin_resource() -> rx.Component:
             rx.flex(
                 rx.flex(
                     rx.image(
-                        src="/sidebar.png",
+                        src="/whitesidebar.png",
                         width="28px",
                         height="28px",
                         cursor="pointer",
@@ -568,14 +568,15 @@ def admin_resource() -> rx.Component:
                     ),
                     rx.text(
                         "SERSM",
-                        color="black",
+                        color="white",
                         font_weight="bold",
                         font_size="1.5em",
                     ),
                     align="center",
-                    spacing="4",
+                    spacing="6",
+                    margin_left="10px"
                 ),
-                bg="aqua",
+                bg="#1E88E5",
                 justify="start",
                 align="center",
                 width="100%",
@@ -593,7 +594,7 @@ def admin_resource() -> rx.Component:
                             rx.button(
                                 rx.icon("plus", size=16),
                                 "Add Resource",
-                                color_scheme="blue",
+                                color_scheme="green",
                                 size="2",
                                 cursor="pointer",
                                 on_click=ResourceState.open_add_dialog,
@@ -627,7 +628,8 @@ def admin_resource() -> rx.Component:
                     justify="between",
                     align="center",
                     padding="1em",
-                    width="100%",
+                    width="99%",
+                    padding_left="30px",
                 ),
 
                 # Filter bar
@@ -638,7 +640,7 @@ def admin_resource() -> rx.Component:
                     filter_button("Equipment", "equipment"),
                     spacing="2",
                     wrap="wrap",
-                    padding="0 1em 1em 1em",
+                    padding="0 1em 1em 2em",
                 ),
 
                 # Table
@@ -652,6 +654,7 @@ def admin_resource() -> rx.Component:
                                 rx.table.column_header_cell("Details", color="black"),
                                 rx.table.column_header_cell("Actions", color="black"),
                             ),
+                            border_bottom="1px solid #e5e7eb",
                         ),
                         rx.table.body(
                             rx.foreach(
@@ -684,7 +687,8 @@ def admin_resource() -> rx.Component:
                                                     rx.button(
                                                         rx.icon("pencil", size=14),
                                                         size="1",
-                                                        variant="soft",
+                                                        variant="solid",
+                                                        high_contrast=True,
                                                         color_scheme="blue",
                                                         on_click=ResourceState.open_edit_dialog(row),
                                                     )
@@ -719,7 +723,7 @@ def admin_resource() -> rx.Component:
                                                     rx.button(
                                                         rx.icon("trash-2", size=14),
                                                         size="1",
-                                                        variant="soft",
+                                                        variant="solid",
                                                         color_scheme="red",
                                                     )
                                                 ),
@@ -754,6 +758,7 @@ def admin_resource() -> rx.Component:
                                             align="center",
                                         )
                                     ),
+                                    border_bottom="1px solid #e5e7eb",
                                 ),
                             )
                         ),
@@ -761,6 +766,10 @@ def admin_resource() -> rx.Component:
                     ),
                     padding="0 1em",
                     overflow_x="auto",
+                    bg="white",
+                    margin_left="20px",
+                    margin_right="20px",
+                    border_radius="10px"
                 ),
 
                 # Pagination
@@ -797,7 +806,7 @@ def admin_resource() -> rx.Component:
                 flex="1",
             ),
 
-            bg="white",
+            bg="#E2E2E2",
             min_height="100vh",
             direction="column",
             justify="between",
