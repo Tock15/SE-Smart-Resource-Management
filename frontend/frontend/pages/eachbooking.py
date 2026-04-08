@@ -400,7 +400,7 @@ def time_button(time: str) -> rx.Component:
     # A teacher can click this slot if it's only student-booked
     is_overridable = is_teacher & is_student_booked & is_24hrs_ok
     # A slot is hard-blocked when booked and 100% NOT overridable
-    is_blocked = is_booked & ~is_overridable & is_passed
+    is_blocked = (is_booked & ~is_overridable) | is_passed
 
     return rx.box(
         rx.hstack(
@@ -444,7 +444,7 @@ def time_button(time: str) -> rx.Component:
                             True,
                             (is_overridable & ~is_selected, "#E65100"),
                             (~is_overridable & is_selected, "#1E88E5"),
-                            (~is_overridable & is_selected, "#9F1EE5"),
+                            (is_overridable & is_selected, "#9F1EE5"),
                             ("black")
                         )
                     ),
