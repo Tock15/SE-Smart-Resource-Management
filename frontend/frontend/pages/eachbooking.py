@@ -338,16 +338,18 @@ class BookingState(rx.State):
             token_data = dashboard_state.verify_token()
             self.current_user_role = token_data.get("message", {}).get("role", "")
             if self.current_user_role == "admin":
-                return rx.redirect("/")
+                dashboard_state.set_error_msg("Admin doesn't need to access this page")
+                yield rx.redirect("/")
 
             # initilize
             self.selected_date = str(date.today())
             self.selected_times = []
             self.start_date = ""
             self.end_date = ""
-            return await self.fetch_resource()
+            yield await self.fetch_resource()
         else:
-            return rx.redirect("/login")
+            dashboard_state.set_error_msg("You need to login before access this page")
+            yield rx.redirect("/login")
 
 
 def navbar() -> rx.Component:
