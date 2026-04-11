@@ -3,6 +3,10 @@ import reflex as rx
 from frontend.state import State
 from .sidebar import SidebarState, sidebar
 
+class HomeState(rx.State):
+    async def check_error(self):
+        home_state = await self.get_state(State)
+        return home_state.check_error()
 def index() -> rx.Component:
     shared_bg = "url('/room_home.jpg')"
 
@@ -215,4 +219,5 @@ def index() -> rx.Component:
             width="100%",
         ),
         width="100%",
+        on_mount=HomeState.check_error
     )

@@ -11,9 +11,21 @@ class LoginState(rx.State):
     token: str = ""
     token_type: str = ""
     role: str = "student"
-    error_message: str = ""
 
     async def login_function(self):
+        home_state = await self.get_state(State)
+        
+        if (len(self.username) < 1) or (len(self.password) < 1):
+            home_state.set_error_msg("Username or password cannot be null")
+        elif len(self.password) < 8:
+            home_state.set_error_msg("Password length must be longer than 8 characters")
+
+        toast = home_state.check_error()
+
+        if toast:
+            yield toast
+            return
+
         res = requests.post(
             "http://localhost:8000/auth/login",
             data={
@@ -21,13 +33,13 @@ class LoginState(rx.State):
                 "password": self.password,
             },
         )
+        home_state = await self.get_state(State)
+        data = res.json()
+        print(data)
         if res.status_code == 200:
-            data = res.json()
             self.token = data["access_token"]
             self.token_type = data["token_type"]
-            self.error_message = ""
-
-            home_state = await self.get_state(State)
+            
             home_state.set_user_data(
                 username=self.username,
                 token=self.token,
@@ -39,19 +51,12 @@ class LoginState(rx.State):
             )
             print(decoded)
 
-            return rx.redirect("/")
-        elif res.status_code == 401:
-            self.error_message = "Wrong username or password"
-            print(self.error_message)
-        elif res.status_code == 422:
-            self.error_message = "Invalid input"
-            print(self.error_message)
-        elif res.status_code == 500:
-            self.error_message = "Server error, try again later"
-            print(self.error_message)
+            yield rx.redirect("/")
         else:
-            self.error_message = f"Unexpected error: {res.status_code}"
-            print(self.error_message)
+            yield rx.toast.error(
+            f"Login failed: {data["detail"]}",
+            duration=4000,
+        )
     def getToken(self):
         return {"token":self.token,"token_type":self.token_type}
     
@@ -59,6 +64,7 @@ class LoginState(rx.State):
 def login_page() -> rx.Component:
     return rx.center(
     rx.box(
+        rx.toast.provider(),
         rx.flex(
             rx.box(
                 rx.link(
@@ -149,5 +155,6 @@ def login_page() -> rx.Component:
         bg="linear-gradient(135deg, #29B6F6, #0288D1)"
     ),
     height="100vh",
-    bg="gray"
+    bg="gray",
+    on_mount=State.check_error
 )

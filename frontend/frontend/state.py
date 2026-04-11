@@ -15,6 +15,7 @@ class State(rx.State):
     role : str = ""
     token : str = ""
     token_type : str = ""
+    error_msg : str = ""
     booking_info : dict = {}
 
     def set_user_data(self, username=None, role=None, token=None, token_type=None):
@@ -67,4 +68,15 @@ class State(rx.State):
         except jwt.InvalidTokenError:
             return({"message" : "Invalid token",
                    "status" : "ERROR"})
+
+    def set_error_msg(self, new_message=""):
+        self.error_msg = new_message
+    
+    def check_error(self):
+        if self.error_msg:
+            msg = self.error_msg
+            self.error_msg = ""  # clear it
+            return rx.toast.error(msg, duration=5000)
+    
+
 
