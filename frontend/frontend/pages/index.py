@@ -10,7 +10,7 @@ def index() -> rx.Component:
         sidebar(),
         # main content must grow
         rx.flex(
-            rx.box(
+            rx.box( 
                 # Navbar
                 rx.box(
                     rx.flex(

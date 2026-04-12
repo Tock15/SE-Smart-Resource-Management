@@ -148,7 +148,7 @@ def locker_card(item: dict) -> rx.Component:
                         rx.badge(item["locker_no"], color_scheme="cyan"),
                     ),
                     rx.text(
-                        "i dont know what to put in since the ",
+                        item["description"],
                         font_size="13px",
                         color="gray",
                         margin_top="10px"
