@@ -21,7 +21,7 @@ STATUS_COLORS = {
     "approved": "green",
     "rejected": "red",
     "cancelled": "gray",
-    "overwritten": "purple"
+    "overridden": "purple"
 }
 
 
@@ -130,10 +130,10 @@ def status_badge(status: str) -> rx.Component:
         ("approved", "green"),
         ("rejected", "red"),
         ("cancelled", "gray"),
-        ("overwritten", "purple"),
+        ("overridden", "purple"),
         "blue",  # default
     )
-    return rx.badge(status, color_scheme=color, variant="soft", radius="full")
+    return rx.badge(status, color_scheme=color, variant="solid", radius="full", high_contrast=True)
 
 
 def filter_button(label: str, value: str) -> rx.Component:
@@ -145,6 +145,7 @@ def filter_button(label: str, value: str) -> rx.Component:
         color_scheme=rx.cond(is_active, "blue", "black"),
         on_click=RequestsDashboardState.set_filter(value),
         cursor="pointer",
+        # bg=rx.cond(is_active, "white", "transparent")
     )
 
 
@@ -195,7 +196,7 @@ def admin_dashboard() -> rx.Component:
             rx.flex(
                 rx.flex(
                     rx.image(
-                        src="/sidebar.png",
+                        src="/whitesidebar.png",
                         width="28px",
                         height="28px",
                         cursor="pointer",
@@ -203,14 +204,15 @@ def admin_dashboard() -> rx.Component:
                     ),
                     rx.text(
                         "SERSM",
-                        color="black",
+                        color="white",
                         font_weight="bold",
                         font_size="1.5em",
                     ),
                     align="center",
-                    spacing="4",
+                    spacing="6",
+                    margin_left="10px"
                 ),
-                bg="aqua",
+                bg="#1E88E5",
                 justify="start",
                 align="center",
                 width="100%",
@@ -226,14 +228,15 @@ def admin_dashboard() -> rx.Component:
                         filter_button("Approved", "approved"),
                         filter_button("Rejected", "rejected"),
                         filter_button("Cancelled", "cancelled"),
-                        filter_button("Overwritten", "overwritten"),
+                        filter_button("Overridden", "overridden"),
                         spacing="2",
                         wrap="wrap",
                     ),
                     justify="between",
                     align="center",
                     padding="1em",
-                    width="100%",
+                    width="99%",
+                    padding_left="30px",
                 ),
                 # Table
                 rx.flex(
@@ -247,6 +250,7 @@ def admin_dashboard() -> rx.Component:
                                 rx.table.column_header_cell("Status", color="black"),
                                 rx.table.column_header_cell("Actions", color="black"),
                             ),
+                            border_bottom="1px solid #e5e7eb",
                         ),
                         rx.table.body(
                             rx.foreach(
@@ -321,14 +325,19 @@ def admin_dashboard() -> rx.Component:
                                             align="center",
                                             spacing="1",
                                         )
-                                    )
+                                    ),
+                                    border_bottom="1px solid #e5e7eb",
                                 ),
-                            )
+                            ),
                         ),
                         width="100%",
                     ),
                     padding="0 1em",
                     overflow_x="auto",
+                    bg="white",
+                    margin_left="20px",
+                    margin_right="20px",
+                    border_radius="10px"
                 ),
                 # Pagination
                 rx.flex(
@@ -336,7 +345,13 @@ def admin_dashboard() -> rx.Component:
                         rx.icon("chevron-left"),
                         on_click=RequestsDashboardState.prev_page,
                         disabled=RequestsDashboardState.current_page <= 1,
-                        color="black",
+                        color=rx.cond(
+                            RequestsDashboardState.current_page <= 1,
+                            "black",
+                            "white"
+                        ),
+                        color_scheme="gray",
+                        variant="solid",
                         size="2",
                     ),
                     rx.text(
@@ -344,14 +359,20 @@ def admin_dashboard() -> rx.Component:
                         rx.text.strong(RequestsDashboardState.current_page),
                         " of ",
                         rx.text.strong(RequestsDashboardState.total_pages),
-                        color="gray",
+                        color="black",
                         font_size="0.9em",
                     ),
                     rx.icon_button(
                         rx.icon("chevron-right"),
                         on_click=RequestsDashboardState.next_page,
                         disabled=RequestsDashboardState.current_page >= RequestsDashboardState.total_pages,
-                        color="black",
+                        color=rx.cond(
+                            RequestsDashboardState.current_page >= RequestsDashboardState.total_pages,
+                            "black",
+                            "white"
+                        ),
+                        color_scheme="gray",
+                        variant="solid",
                         size="2",
                     ),
                     align="center",
@@ -362,7 +383,7 @@ def admin_dashboard() -> rx.Component:
                 direction="column",
                 flex="1",
             ),
-            bg="white",
+            bg="#E2E2E2",
             min_height="100vh",
             direction="column",
             justify="between",
