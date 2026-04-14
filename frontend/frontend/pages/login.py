@@ -11,7 +11,7 @@ class LoginState(rx.State):
     token: str = ""
     token_type: str = ""
     role: str = "student"
-
+        
     async def login_function(self):
         home_state = await self.get_state(State)
         
@@ -91,7 +91,8 @@ def login_page() -> rx.Component:
                 width="300px",
                 height="100%",
                 overflow="hidden",
-                border_radius="40px"
+                border_radius="40px",
+                box_shadow="10px 0 40px rgba(0, 0, 0, 0.17)",
             ),  
             rx.box(
                 rx.center(
@@ -126,7 +127,6 @@ def login_page() -> rx.Component:
                             on_click=LoginState.login_function,margin_top="30px",
                             
                         ),
-                        
                         rx.hstack(
                             rx.text("Dont have an Account?"),
                             rx.link("Register",href="/register"),
@@ -152,7 +152,8 @@ def login_page() -> rx.Component:
         height="600px",
         padding="20px",
         border_radius="60px",
-        bg="linear-gradient(135deg, #29B6F6, #0288D1)"
+        bg="linear-gradient(to top,#C8DDF7, #ADD2F7, #7FB6F5)",
+        box_shadow="0 20px 60px rgba(0, 0, 0, 0.2)",
     ),
     height="100vh",
     bg="gray",

@@ -13,7 +13,8 @@ from frontend.pages.Bookinghistory import orders_page
 from frontend.pages.eachbooking import booking_page
 from frontend.pages.admin_resource import admin_resource
 from frontend.pages.invite import invite_page
-
+from frontend.pages.equipmentandlocker import equipmentandlocker_page
+from frontend.pages.testing import calendar_page
 
 app = rx.App()
 app.add_page(index, route="/")
@@ -28,3 +29,5 @@ app.add_page(orders_page,route="/history")
 app.add_page(booking_page,route="/booking/[booking_id]")
 app.add_page(admin_resource,route="/admin/resources")
 app.add_page(invite_page,route="/invite")
+app.add_page(equipmentandlocker_page,route="/a")
+app.add_page(calendar_page,route="/testing")

@@ -2,7 +2,8 @@ import reflex as rx
 from .sidebar import SidebarState, sidebar
 import requests
 from frontend.state import State
-from datetime import date, datetime, timedelta
+from datetime import date,datetime, timedelta
+from .testing import CalendarState,calendar_page
 
 
 class BookingState(rx.State):
@@ -14,6 +15,7 @@ class BookingState(rx.State):
     start_date: str = ""
     end_date: str = ""
     current_user_role: str = ""
+    error_message: str = ""
 
     # Setter
     def set_start_date(self, value: str):
@@ -46,8 +48,9 @@ class BookingState(rx.State):
     async def submit_booking(self):
         # state object
         main_state = await self.get_state(State)
-        # data abstract from token
+        calendar_state = await self.get_state(CalendarState)
         token_data = main_state.verify_token()
+        print(calendar_state.start_date, calendar_state.end_date)
         # id of current resource
         resource_id = self.router.page.params.get("booking_id", "")
         # id of current user from token
@@ -107,7 +110,38 @@ class BookingState(rx.State):
                 self.end_date = ""
                 # go invite page
                 return rx.redirect("/invite")
-        # if current resource is locker or equipment
+        elif self.resource["type"] in ["equipment","locker"]:
+            if not calendar_state.confirmed:
+                return rx.toast.error(
+                    "Please select and confirm your dates first.",
+                    duration=4000,
+                )
+            if not calendar_state.start_date or not calendar_state.end_date:
+                return rx.toast.error(
+                    "Please select and confirm your dates first.",
+                    duration=4000,
+                )
+            
+            self.error_message = ""
+            start_time = f"{calendar_state.start_date}T00:00:00"
+            end_time   = f"{calendar_state.end_date}T23:59:59"
+
+            payload = {
+                "resource_id": int(resource_id),
+                "start_time": start_time,
+                "end_time": end_time,
+            }
+            res = requests.post(
+                "http://localhost:8000/bookings/",
+                json=payload,
+                headers={"Authorization": f"Bearer {main_state.token}"}
+            )
+            if res.status_code == 201:
+                calendar_state.reset_dates()
+                calendar_state.disabled_days = []
+                return rx.redirect("/")
+            else:
+                print(res.json())
         else:
             # format start date and end date if available cause locker and equipment only give date not time
             if self.start_date and self.end_date:
@@ -133,7 +167,7 @@ class BookingState(rx.State):
             self.selected_date = date.today()
             self.start_date = ""
             self.end_date = ""
-            # go to home page
+            calendar_state.disabled_days = []
             return rx.redirect("/")
     # format JSON -> dict
     def data_to_resource(self, data):
@@ -305,7 +339,12 @@ class BookingState(rx.State):
     def datetime_format(self, date_list):
         return f"{date_list[2]}-{date_list[1]}-{date_list[0]}"
 
-    # get resource info by id and date
+    def month_format(self, date_list):
+        return f"{date_list[1]}-{date_list[0]}"
+
+    def get_date_only(timestamp: str) -> str:
+        return timestamp.split("T")[0]
+    
     async def fetch_resource(self):
         booking_id = self.router.page.params.get("booking_id", "")
         if not booking_id:
@@ -313,10 +352,13 @@ class BookingState(rx.State):
 
         if self.selected_date == "":
             self.selected_date = str(date.today())
+            
         today = str(self.selected_date).split("-")
         formatted_date = self.datetime_format(today)
 
         dashboard_state = await self.get_state(State)
+        calendar_state = await self.get_state(CalendarState)
+
         res = requests.get(
             f"http://localhost:8000/resources/{booking_id}?date={formatted_date}",
             headers={"Authorization": f"Bearer {dashboard_state.token}"}
@@ -325,18 +367,72 @@ class BookingState(rx.State):
             try:
                 data = res.json()
                 self.resource = self.data_to_resource(data)
+                print(data)
             except ValueError:
                 print("Response is not valid JSON")
         else:
-            print("Request failed:")
-            print(res.json())
+            formatted_date = date.today().strftime("%m-%Y")
+            res1 = requests.get(
+                f"http://localhost:8000/resources/{booking_id}?date={formatted_date}",
+                headers={"Authorization": f"Bearer {dashboard_state.token}"}
+            )
+            try:
+                data = res1.json()
+                self.resource = self.data_to_resource(data)
+                print(data)
+                await self.check_max_range(self.resource["type"])
+            except ValueError:
+                print("Response is not valid JSON")
 
-    # check if user is login + fetch user role and resource info
+        if self.resource.get("type") in ["equipment", "locker"]:
+            calendar_state.disabled_days = []
+            bookings = self.resource.get("bookings", [])
+            for booking in bookings:
+                if booking.get("status") == "cancelled":
+                    continue
+                timeslot = booking.get("timeslot", {})
+                start_time = timeslot.get("start_time", "")
+                end_time   = timeslot.get("end_time", "")
+                if start_time and end_time:
+                    start_date = start_time.split("T")[0]
+                    end_date   = end_time.split("T")[0]
+                    calendar_state.add_disabled_range(start_date, end_date)
+        else:
+            calendar_state.disabled_days = [] 
+            
+    async def check_max_range(self,resource_time):
+        calendar_state = await self.get_state(CalendarState)
+        if resource_time == "locker":
+           calendar_state.max_range = 200
+        elif resource_time == "equipment":
+            calendar_state.max_range = 3
+    
+    async def getallbookingtime(self, data):
+        calendar_state = await self.get_state(CalendarState)
+        bookings = data.get("bookings", [])
+        times = []
+        for booking in bookings:
+            timeslot = booking.get("timeslot", {})
+            start_time = timeslot.get("start_time", "")
+            end_time = timeslot.get("end_time", "")
+            if start_time and end_time:
+                start_date = start_time.split("T")[0]
+                end_date = end_time.split("T")[0]
+                times.append((start_date, end_date))
+                print(f"Booking from {start_date} to {end_date}")
+                calendar_state.add_disabled_range(start_date, end_date)
+                calendar_state.add_disabled_range("2026-04-08", "2026-04-10")
+            yield
+            
     async def authorization(self):
         dashboard_state = await self.get_state(State)
+        calendar_state = await self.get_state(CalendarState)
         if dashboard_state.user_check():
             token_data = dashboard_state.verify_token()
             self.current_user_role = token_data.get("message", {}).get("role", "")
+            calendar_state.disabled_days = []   # ← reset on every page open
+            calendar_state.reset_dates()        # ← clear any leftover confirmed state
+            calendar_state.set_calendar_month_year()
             if self.current_user_role == "admin":
                 dashboard_state.set_error_msg("Admin doesn't need to access this page")
                 yield rx.redirect("/")
@@ -541,6 +637,7 @@ def booking_page() -> rx.Component:
 
     return rx.box(
         navbar(),
+        rx.toast.provider(position="bottom-right"),
         rx.box(
             rx.cond(
                 BookingState.resource["type"] == "coworking_space",
@@ -793,9 +890,24 @@ def booking_page() -> rx.Component:
                     ),
                     rx.divider(),
 
-                    # Resource info card
-                    rx.hstack(
-                        rx.vstack(
+            # Date range picker
+            rx.vstack(
+                rx.text(
+                    "Select Date Range",
+                    font_size="13px",
+                    font_weight="bold",
+                    color="gray",
+                ),
+                rx.hstack(
+                    calendar_page(),
+                    ),
+                    align="center",
+            ),
+                rx.cond(
+                    BookingState.start_date & BookingState.end_date,
+                    rx.box(
+                        rx.hstack(
+                            rx.icon("calendar", size=14, color="#1E88E5"),
                             rx.text(
                                 BookingState.resource["name"],
                                 font_weight="bold",
@@ -815,92 +927,7 @@ def booking_page() -> rx.Component:
                         border_radius="12px",
                         width="100%",
                     ),
-
-                    # Date range picker
-                    rx.vstack(
-                        rx.text(
-                            "Select Date Range",
-                            font_size="13px",
-                            font_weight="bold",
-                            color="gray",
-                        ),
-                        rx.hstack(
-                            rx.vstack(
-                                rx.text("Start Date", font_size="12px", color="gray"),
-                                rx.input(
-                                    type="date",
-                                    value=BookingState.start_date,
-                                    on_change=BookingState.set_start_date,
-                                    border="1.5px solid #e0e0e0",
-                                    border_radius="8px",
-                                    padding="10px",
-                                    width="100%",
-                                    height="45px",
-                                    bg="white",
-                                    color="black",
-                                    _focus={"border": "1.5px solid #1E88E5", "outline": "none"},
-                                ),
-                                align="start",
-                                spacing="1",
-                                width="100%",
-                            ),
-                            rx.icon("arrow-right", size=16, color="#9e9e9e", margin_top="22px"),
-                            rx.vstack(
-                                rx.text("End Date", font_size="12px", color="gray"),
-                                rx.input(
-                                    type="date",
-                                    value=BookingState.end_date,
-                                    on_change=BookingState.set_end_date,
-                                    border="1.5px solid #e0e0e0",
-                                    border_radius="8px",
-                                    padding="10px",
-                                    width="100%",
-                                    height="45px",
-                                    bg="white",
-                                    color="black",
-                                    _focus={"border": "1.5px solid #1E88E5", "outline": "none"},
-                                ),
-                                align="start",
-                                spacing="1",
-                                width="100%",
-                            ),
-                            align="end",
-                            spacing="3",
-                            width="100%",
-                        ),
-                        align="start",
-                        width="100%",
-                        spacing="2",
-                    ),
-
-                    rx.cond(
-                        BookingState.start_date & BookingState.end_date,
-                        rx.box(
-                            rx.hstack(
-                                rx.icon("calendar", size=14, color="#1E88E5"),
-                                rx.text(
-                                    "Booking period: ",
-                                    font_size="13px",
-                                    font_weight="600",
-                                    color="#1E88E5",
-                                ),
-                                rx.text(
-                                    BookingState.start_date + " → " + BookingState.end_date,
-                                    font_size="13px",
-                                    color="#555",
-                                ),
-                                align="center",
-                                spacing="1",
-                            ),
-                            bg="#EBF5FB",
-                            border="1px solid #b3d4f7",
-                            border_radius="8px",
-                            padding="10px 14px",
-                            width="100%",
-                        ),
-                        rx.box(),
-                    ),
-
+                ),
                     # Confirm button
                     rx.button(
                         "Confirm Booking",
@@ -921,7 +948,7 @@ def booking_page() -> rx.Component:
                     spacing="5",
                     width="100%",
                     max_width="500px",
-                    margin_left="500px",
+                    margin="auto",
                 ),
             ),
             padding="40px",

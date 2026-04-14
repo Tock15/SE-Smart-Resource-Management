@@ -146,10 +146,10 @@ def eq_card(item: dict) -> rx.Component:
             # Middle - Info
             rx.box(
                 rx.vstack(
-                    rx.heading(item["name"], size="5",color="black",margin_top="40px"),
+                    rx.heading(item["name"], size="7",color="black"),
                     rx.hstack(
-                        rx.icon("map-pin", size=14, color="#1E88E5"),
-                        rx.text("Room", item["room_no"], font_size="13px", color="#1E88E5"),
+                        rx.badge("Room ", item["type"], color_scheme="blue"),
+                        rx.badge(item["locker_no"], color_scheme="cyan"),
                     ),
                     rx.text(
                         item["description"],
@@ -165,35 +165,6 @@ def eq_card(item: dict) -> rx.Component:
             ),
 
             # Right - Rating & Price
-            rx.box(
-                rx.vstack(
-                    # Rating
-                    rx.hstack(
-                        rx.vstack(
-                            rx.text("Capacity", font_size="17px", font_weight="bold",color="black"),
-                            align="end",
-                            spacing="0"
-                        ),
-                        rx.box(
-                            rx.text(item["capacity"], color="white", font_weight="bold", font_size="18px"),
-                            bg="#1E88E5",
-                            padding="8px 12px",
-                            border_radius="8px 8px 8px 0px",
-                        ),
-                        spacing="2",
-                        align="center"
-                    ),
-
-                    align="end",
-                    spacing="2",
-                    height="100%",
-                    justify="between"
-                ),
-                width="200px",
-                flex_shrink="0",
-                padding="15px",
-            ),
-
             width="100%",
             align="stretch",
         ),

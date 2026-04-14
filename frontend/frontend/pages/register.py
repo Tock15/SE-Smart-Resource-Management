@@ -16,8 +16,30 @@ class RegisterState(rx.State):
     token: str = ""
     token_type : str = ""
     error_message : str = ""
+    submitted: bool = False
+    
+    def set_username(self, value: str):
+        self.username = value
+        self.error_message = ""
+        self.submitted = False
 
+    def set_password(self, value: str):
+        self.password = value
+        self.error_message = ""
+        self.submitted = False
+
+    def set_email(self, value: str):
+        self.email = value
+        self.error_message = ""
+        self.submitted = False
+
+    def set_student_id(self, value: str):
+        self.student_id = value
+        self.error_message = ""
+        self.submitted = False
+        
     async def login_function(self, username, password):
+        self.error_message = ""
         res = requests.post(
             "http://localhost:8000/auth/login",
             data={
@@ -67,6 +89,8 @@ class RegisterState(rx.State):
         if res.status_code == 201:
             data = res.json()
             return await self.login_function(self.username, self.password)
+        elif res.status_code == 400:
+            self.error_message = "Invalid input"
         elif res.status_code == 401:
             self.error_message = "Wrong username or password"
             print(self.error_message)
@@ -135,8 +159,6 @@ def register_page() -> rx.Component:
                             ,height="45px",border_radius="40px",padding_left="20px",
                             on_click=RegisterState.register,
                         ),
-                        
-                        
                         align="start",  
                         spacing="0"
                     ),
@@ -166,7 +188,8 @@ def register_page() -> rx.Component:
         height="675px",
         padding="20px",
         border_radius="60px",
-        bg="linear-gradient(to top,#C8DDF7, #ADD2F7, #7FB6F5)"
+        bg="linear-gradient(to top,#C8DDF7, #ADD2F7, #7FB6F5)",
+        box_shadow="0 20px 60px rgba(0, 0, 0, 0.2)",
     ),
     height="100vh",
     bg="gray"
