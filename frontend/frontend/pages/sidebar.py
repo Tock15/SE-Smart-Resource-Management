@@ -150,22 +150,25 @@ def sidebar() -> rx.Component:
                     ),
                 ),
                 rx.divider(),
-                rx.flex(
-                    rx.image(
-                        src="/sidebar_leave.png",
-                        width="10%",
-                        height="10%"
-                    ),
-                    rx.text(
-                        "Logout",
-                        color="black",
-                        font_size="1.3em",
-                    ),
-                    width="100%",
-                    spacing="3",
-                    align="center",
-                    cursor="pointer",
-                    on_click=SidebarState.logout
+                rx.cond(
+                    State.role != "",
+                    rx.flex(
+                        rx.image(
+                            src="/sidebar_leave.png",
+                            width="10%",
+                            height="10%"
+                        ),
+                        rx.text(
+                            "Logout",
+                            color="black",
+                            font_size="1.3em",
+                        ),
+                        width="100%",
+                        spacing="3",
+                        align="center",
+                        cursor="pointer",
+                        on_click=SidebarState.logout
+                    )
                 ),
                 direction="column",
                 spacing="4",

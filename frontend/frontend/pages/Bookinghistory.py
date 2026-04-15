@@ -80,6 +80,7 @@ class MyState(rx.State):
         if dashboard_state.user_check():
             await self.get_data()
         else:
+            dashboard_state.set_error_msg("you need to login before accessing this page")
             return rx.redirect("/login")
 
 
