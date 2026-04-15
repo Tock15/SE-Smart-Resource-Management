@@ -7,6 +7,7 @@ class InviteState(rx.State):
     student_id_input: str = ""
     invited_list: list[dict] = []
     min_guests : int = 0
+    error_msg : str = ""
 
     def set_student_id(self, value: str):
         self.student_id_input = value
@@ -15,18 +16,40 @@ class InviteState(rx.State):
         main_state = await self.get_state(State)
         host_id = main_state.verify_token()["message"]["id"]
         ids = [s["id"] for s in self.invited_list]
-        if self.student_id_input and self.student_id_input not in ids:
+        if self.student_id_input == "":
+            self.error_msg = "Inviting input cannot be empty!"
+        elif self.student_id_input in ids:
+            self.error_msg = "You have already invite this person!"
+
+        if self.error_msg == "":
             res = requests.get(
                 f"http://localhost:8000/bookings/existing/{self.student_id_input}"
             )
             data = res.json()
-            if res.status_code == 200 and host_id != data["user_id"]:
-                username = data["username"]
-                user_id = data["user_id"]
-                self.invited_list.append({"id": self.student_id_input, "user_id": user_id, "name" : username ,"status": "Pending"})
-                self.student_id_input = ""
+            if res.status_code == 200:
+                if host_id == data["user_id"]:
+                    self.error_msg = "You cannot invite yourself!"
+                else:
+                    username = data["username"]
+                    user_id = data["user_id"]
+                    self.invited_list.append({"id": self.student_id_input, "user_id": user_id, "name" : username ,"status": "Pending"})
+                    self.student_id_input = ""
+                    yield rx.toast.success(
+                        f"Invited {username} successfully!",
+                        duration=4000
+                    )
             else:
-                print(data)
+                if data["detail"]:
+                    self.error_msg = data["detail"]
+                else:
+                    self.error_msg = str(data)
+        if self.error_msg:
+            msg = self.error_msg
+            self.error_msg = ""
+            yield rx.toast.error(
+                f"{msg}",
+                duration=4000
+            )
 
     def remove_invite(self, student_id: str):
         self.invited_list = [s for s in self.invited_list if s["id"] != student_id]
@@ -58,6 +81,7 @@ class InviteState(rx.State):
             main_state.reset_booking_info()
             self.student_id_input = ""
             self.invited_list = []
+            main_state.set_success_msg("You have sucessfully book the room!")
             return rx.redirect("/")
         else:
             print(res.json())
@@ -102,7 +126,7 @@ def status_badge(student: dict) -> rx.Component:
                 width="7px",
                 height="7px",
                 border_radius="50%",
-                bg=rx.cond(student["status"] == "Accepted", "#22c55e", "#f59e0b"),
+                bg="#f59e0b",
             ),
             rx.text(
                 student["status"],
@@ -111,19 +135,15 @@ def status_badge(student: dict) -> rx.Component:
             ),
             align="center",
             spacing="1",
+            padding_x="5px",
+            padding_y="2px"
         ),
         px="10px",
         py="4px",
         border_radius="20px",
-        bg=rx.cond(student["status"] == "Accepted", "#e8f5e9", "#fff8e1"),
-        border=rx.cond(
-            student["status"] == "Accepted",
-            "1px solid #bbf7d0",
-            "1px solid #fde68a",
-        ),
-        color=rx.cond(student["status"] == "Accepted", "#22c55e", "#f59e0b"),
-        cursor="pointer",
-        on_click=InviteState.toggle_status(student["id"]),
+        bg="#fff8e1",
+        border="1px solid #fde68a",
+        color="#f59e0b",
     )
 
 
@@ -166,6 +186,7 @@ def invited_row(student: dict) -> rx.Component:
 @rx.page(route="/invite", on_load=InviteState.authorization)
 def invite_page() -> rx.Component:
     return rx.box(
+        rx.toast.provider(),
         navbar(),
         rx.flex(
             rx.box(
@@ -312,7 +333,7 @@ def invite_page() -> rx.Component:
                 flex="1",
             ),
             justify="center",
-            align="start", # <- HERE
+            align="start",
             align_items="center",
             padding="48px 24px",
             bg="#f0f4fa",
