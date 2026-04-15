@@ -53,10 +53,16 @@ class LoginState(rx.State):
 
             yield rx.redirect("/")
         else:
-            yield rx.toast.error(
-            f"Login failed: {data["detail"]}",
-            duration=4000,
-        )
+            if data["detail"]:
+                yield rx.toast.error(
+                f"Login failed: {data["detail"]}",
+                duration=4000,
+                )
+            else:
+                yield rx.toast.error(
+                f"Login failed: {res.status_code}",
+                duration=4000,
+            )
     def getToken(self):
         return {"token":self.token,"token_type":self.token_type}
     
