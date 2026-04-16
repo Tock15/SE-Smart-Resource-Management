@@ -81,7 +81,7 @@ class InviteState(rx.State):
             main_state.reset_booking_info()
             self.student_id_input = ""
             self.invited_list = []
-            main_state.set_success_msg("You have sucessfully book the room!")
+            main_state.set_success_msg(f"You have sucessfully booked room {invite_state["name"]}!")
             return rx.redirect("/")
         else:
             print(res.json())

@@ -94,6 +94,7 @@ class BookingState(rx.State):
                     self.selected_date = str(date.today())
                     self.start_date = ""
                     self.end_date = ""
+                    main_state.set_success_msg(f"You have sucessfully booked {self.resource["name"]} ({self.resource["type"]})")
                     # go home page
                     return rx.redirect("/")
                 else:
@@ -102,7 +103,7 @@ class BookingState(rx.State):
             else:
                 # Students need to invite people
                 # set info for invite page
-                main_state.set_booking_info(int(resource_id), start_time, end_time, self.resource["min_guests"])
+                main_state.set_booking_info(int(resource_id),self.resource["name"] ,start_time, end_time, self.resource["min_guests"])
                 # clear inputs
                 self.selected_times = []
                 self.selected_date = str(date.today())
@@ -139,6 +140,7 @@ class BookingState(rx.State):
             if res.status_code == 201:
                 calendar_state.reset_dates()
                 calendar_state.disabled_days = []
+                main_state.set_success_msg(f"You have sucessfully booked {self.resource["name"]} ({self.resource["type"]})")
                 return rx.redirect("/")
             else:
                 print(res.json())

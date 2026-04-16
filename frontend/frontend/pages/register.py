@@ -12,6 +12,7 @@ class RegisterState(rx.State):
     email: str = ""
     student_id: str = ""
     password: str = ""
+    confirm_password: str = ""
     role: str = "student"
     token: str = ""
     token_type : str = ""
@@ -103,7 +104,14 @@ class RegisterState(rx.State):
         else:
             self.error_message = f"Unexpected error: {res.status_code}"
             print(self.error_message)
-        
+    def initilize(self):
+        self.username = ""
+        self.email = "" 
+        self.student_id = "" 
+        self.password = ""
+        self.confirm_password = ""
+
+# @rx.page(route="/register", on_load=RegisterState.initilize)
 def register_page() -> rx.Component:
     return rx.center(
     rx.box(
