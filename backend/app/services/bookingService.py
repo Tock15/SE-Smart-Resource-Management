@@ -132,7 +132,7 @@ class BookingService:
             if user_id:
                 query = query.filter(Booking.user_id == user_id)
                 
-        return query.order_by(Booking.created_at.asc()).all()
+        return query.order_by(Booking.created_at.desc()).all() 
     @staticmethod
     def update_booking_status(db: Session, booking_id: int, status: BookingStatus):
         booking = db.query(Booking).filter(Booking.booking_id == booking_id).first()
@@ -154,6 +154,19 @@ class BookingService:
         booking = db.query(Booking).filter(Booking.booking_id == booking_id).first()
         if not booking:
             return False
+        now = datetime.now()
+        booking_start = booking.timeslot.start_time
+        
+        if booking_start - now < timedelta(minutes=30):
+            raise HTTPException(
+                status_code=400, 
+                detail="Bookings cannot be cancelled within 30 minutes of the start time."
+            )
+        if booking.status not in [BookingStatus.PENDING, BookingStatus.APPROVED]:
+            raise HTTPException(
+                status_code=400, 
+                detail="Only pending or approved bookings can be cancelled."
+            )
         booking.status = BookingStatus.CANCELLED
         db.commit()
         return True

@@ -41,7 +41,8 @@ class RequestsDashboardState(rx.State):
                 booking_id=item["booking_id"],
                 username=item["user"]["username"],
                 resource_name=item["resource"]["name"],
-                time_range=f"{start} - {end}",
+                # time_range=f"{start} - {end}",
+                time_range=format_date_python(start, end),
                 status=item["status"],
                 student_id=item["user"]["student_id"],
                 start_time=start,
@@ -121,6 +122,31 @@ class RequestsDashboardState(rx.State):
         elif res.status_code == 401:
             return rx.redirect("/")
 
+def format_date_python(start: str, end: str) -> str:
+    month_names = {
+        "1": "January", "2": "February", "3": "March", "4": "April",
+        "5": "May", "6": "June", "7": "July", "8": "August",
+        "9": "September", "10": "October", "11": "November", "12": "December"
+    }
+
+    def to_readable(date: str) -> str:
+        year, month, day = date.split("-")
+        return f"{int(day)} {month_names[month.lstrip('0')]} {year}"
+
+    def trim_time(time: str) -> str:
+        h, m, _ = time.split(":")
+        return f"{h}:{m}"
+
+    start_date, start_time = start.split()
+    end_date, end_time = end.split()
+
+    start_time = trim_time(start_time)
+    end_time = trim_time(end_time)
+
+    if start_date == end_date:
+        return f"{to_readable(start_date)} ({start_time}–{end_time})"
+    else:
+        return f"{to_readable(start_date)} ({start_time}) – {to_readable(end_date)} ({end_time})"
 
 def status_badge(status: str) -> rx.Component:
     # Map status string to a Radix color scheme
