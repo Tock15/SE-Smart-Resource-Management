@@ -21,6 +21,7 @@ class Booking(rx.Base):
     resource: Resource = Resource()
     timeslot: Timeslot = Timeslot()
     status: str = ""
+    display_time : str = ""
 
 
 class MyState(rx.State):
@@ -42,6 +43,10 @@ class MyState(rx.State):
                     status=item["status"],
                     resource=Resource(**item["resource"]),
                     timeslot=Timeslot(**item["timeslot"]),
+                    display_time=format_date_python(
+                        item["timeslot"]["start_time"],
+                        item["timeslot"]["end_time"]
+                    ),
                     room_no=item.get("room_no", ""),
                     locker_no=item.get("locker_no", ""),
                 )
@@ -83,6 +88,68 @@ class MyState(rx.State):
             dashboard_state.set_error_msg("you need to login before accessing this page")
             return rx.redirect("/login")
 
+def string_to_date(date):
+    year, month, day = date.split("-")
+    match month:
+        case "1":
+            return f"{day} January {year}"
+        case "2":
+            return f"{day} Febuary {year}"
+        case "3":
+            return f"{day} March {year}"
+        case "4":
+            return f"{day} April {year}"
+        case "5":
+            return f"{day} May {year}"
+        case "6":
+            return f"{day} June {year}"
+        case "7":
+            return f"{day} July {year}"
+        case "8":
+            return f"{day} August {year}"
+        case "9":
+            return f"{day} September {year}"
+        case "10":
+            return f"{day} October {year}"
+        case "11":
+            return f"{day} November {year}"
+        case "12":
+            return f"{day} January {year}"
+        
+# def format_date(start, end):
+#     start_date, start_time = start.split("T")
+#     end_date, end_time = end.split("T")
+#     if start_date == end_date:
+#         return f"{string_to_date(start_date)} ({start_time}-{end_time})"
+#     else:
+#         return f"{string_to_date(start_date)} ({start_time}) - {string_to_date(end_date)} ({end_time})"
+def format_date_python(start: str, end: str) -> str:
+    month_names = {
+        "1": "January", "2": "February", "3": "March", "4": "April",
+        "5": "May", "6": "June", "7": "July", "8": "August",
+        "9": "September", "10": "October", "11": "November", "12": "December"
+    }
+
+    def to_readable(date: str) -> str:
+        year, month, day = date.split("-")
+        return f"{int(day)} {month_names[month.lstrip('0')]} {year}"
+
+    def trim_time(time: str) -> str:
+        h, m, _ = time.split(":")
+        return f"{h}:{m}"
+
+    start_date, start_time = start.split("T")
+    end_date, end_time = end.split("T")
+
+    start_time = trim_time(start_time)
+    end_time = trim_time(end_time)
+
+    if start_date == end_date:
+        return f"{to_readable(start_date)} ({start_time}–{end_time})"
+    else:
+        return f"{to_readable(start_date)} ({start_time}) – {to_readable(end_date)} ({end_time})"
+    
+    
 
 def booking_row(item: Booking) -> rx.Component:
     return rx.table.row(
@@ -103,14 +170,9 @@ def booking_row(item: Booking) -> rx.Component:
                 ),
             ),
         ),
-        rx.table.cell(
-            rx.text(item.resource.type, color="black"),
+        rx.table.cell(rx.text(item.resource.type, color="black"),
         ),
-        rx.table.cell(
-            rx.text(
-                item.timeslot.start_time + " - " + item.timeslot.end_time,
-                color="black",
-            ),
+        rx.table.cell(rx.text(item.display_time, color="black")
         ),
         rx.table.cell(
             rx.cond(
