@@ -111,14 +111,15 @@ def login_page() -> rx.Component:
                             "Login",
                             width="100%",
                             text_align="center",
-                            margin_bottom="30px"
+                            margin_bottom="30px",
+                            color="#1E88E5",
                         ),
 
-                        rx.text("Username",margin="10px 0 5px 20px",font_size="15px"),
-                        rx.input(on_change=LoginState.set_username,value=LoginState.username,placeholder="Username", width="400px",bg="white",margin_bottom="10px",height="45px",border_radius="40px",padding_left="20px",color="black",font_size="17px"),
+                        rx.text("Username",margin="10px 0 5px 20px",font_size="15px",color="#1E88E5",),
+                        rx.input(box_shadow="10px 0 40px rgba(0, 0, 0, 0.17)",on_change=LoginState.set_username,value=LoginState.username,placeholder="Username", width="400px",bg="white",margin_bottom="10px",height="45px",border_radius="40px",padding_left="20px",color="black",font_size="17px"),
                         
-                        rx.text("Password",margin="10px 0 5px 20px",font_size="15px"),
-                        rx.input(type="password",on_change=LoginState.set_password,value=LoginState.password,placeholder="Password", width="400px",bg="white",margin_bottom="10px",height="45px",border_radius="40px",padding_left="20px",color="black",font_size="17px"),
+                        rx.text("Password",margin="10px 0 5px 20px",font_size="15px",color="#1E88E5",),
+                        rx.input(type="password",box_shadow="10px 0 40px rgba(0, 0, 0, 0.17)",on_change=LoginState.set_password,value=LoginState.password,placeholder="Password", width="400px",bg="white",margin_bottom="10px",height="45px",border_radius="40px",padding_left="20px",color="black",font_size="17px"),
                         
                         rx.text(
                             "Forget the password?",
@@ -138,7 +139,7 @@ def login_page() -> rx.Component:
                             
                         ),
                         rx.hstack(
-                            rx.text("Dont have an Account?"),
+                            rx.text("Dont have an Account?",color="#1E88E5",),
                             rx.link("Register",href="/register"),
                             margin_top="30px",
                             justify="center",
@@ -162,7 +163,7 @@ def login_page() -> rx.Component:
         height="600px",
         padding="20px",
         border_radius="60px",
-        bg="linear-gradient(to top,#C8DDF7, #ADD2F7, #7FB6F5)",
+        bg="linear-gradient(to bottom, #FFFFFF, #E8F3FD, #B8D4F7)",
         box_shadow="0 20px 60px rgba(0, 0, 0, 0.2)",
     ),
     height="100vh",

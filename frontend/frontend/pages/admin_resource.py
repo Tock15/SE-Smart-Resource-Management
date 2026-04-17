@@ -630,6 +630,7 @@ def admin_resource() -> rx.Component:
                 align="center",
                 width="100%",
                 padding="1em",
+                height="70px",
             ),
 
             rx.flex(
