@@ -65,7 +65,18 @@ class MyState(rx.State):
             except ValueError:
                 print("Response is not valid JSON")
         else:
-            print("Request failed:", res.status_code)
+            data = res.json()
+            if data["detail"]:
+                return rx.toast.error(
+                    data["detail"],
+                    duration=4000
+                )
+            else:
+                return rx.toast.error(
+                    f"Request failed : {res.status_code}",
+                    duration=4000
+                )
+
 
     def set_search(self, value: str):
         self.search_query = value
@@ -88,41 +99,7 @@ class MyState(rx.State):
             dashboard_state.set_error_msg("you need to login before accessing this page")
             return rx.redirect("/login")
 
-def string_to_date(date):
-    year, month, day = date.split("-")
-    match month:
-        case "1":
-            return f"{day} January {year}"
-        case "2":
-            return f"{day} Febuary {year}"
-        case "3":
-            return f"{day} March {year}"
-        case "4":
-            return f"{day} April {year}"
-        case "5":
-            return f"{day} May {year}"
-        case "6":
-            return f"{day} June {year}"
-        case "7":
-            return f"{day} July {year}"
-        case "8":
-            return f"{day} August {year}"
-        case "9":
-            return f"{day} September {year}"
-        case "10":
-            return f"{day} October {year}"
-        case "11":
-            return f"{day} November {year}"
-        case "12":
-            return f"{day} January {year}"
-        
-# def format_date(start, end):
-#     start_date, start_time = start.split("T")
-#     end_date, end_time = end.split("T")
-#     if start_date == end_date:
-#         return f"{string_to_date(start_date)} ({start_time}-{end_time})"
-#     else:
-#         return f"{string_to_date(start_date)} ({start_time}) - {string_to_date(end_date)} ({end_time})"
+
 def format_date_python(start: str, end: str) -> str:
     month_names = {
         "1": "January", "2": "February", "3": "March", "4": "April",
@@ -293,6 +270,7 @@ def navbar() -> rx.Component:
 @rx.page(route="/history", on_load=MyState.authorization)
 def orders_page() -> rx.Component:
     return rx.box(
+        rx.toast.provider(),
         navbar(),
         rx.box(
             rx.vstack(

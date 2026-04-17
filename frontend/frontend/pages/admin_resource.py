@@ -194,23 +194,34 @@ class ResourceState(rx.State):
     async def submit_add_resource(self):
         dashboard_state = await self.get_state(State)
 
+        payload = None
+
         if self.add_type == "coworking_space":
+            if not all([self.add_name, self.add_description, self.add_room_no, self.add_capacity, self.add_min_guests]):
+                yield rx.toast.error("Please fill all the required inputs!", duration=4000)
+                return
             payload = {
                 "name": self.add_name,
                 "description": self.add_description,
                 "type": self.add_type,
                 "room_no": self.add_room_no,
-                "capacity": int(self.add_capacity) if self.add_capacity else 0,
-                "min_guests": int(self.add_min_guests) if self.add_min_guests else 0,
+                "capacity": int(self.add_capacity),
+                "min_guests": int(self.add_min_guests),
             }
         elif self.add_type == "locker":
+            if not all([self.add_name, self.add_description, self.add_locker_no]):
+                yield rx.toast.error("Please fill all the required inputs!", duration=4000)
+                return
             payload = {
                 "name": self.add_name,
                 "description": self.add_description,
                 "type": self.add_type,
                 "locker_no": self.add_locker_no,
             }
-        else:
+        else:  # equipment
+            if not all([self.add_name, self.add_description, self.add_serial_no]):
+                yield rx.toast.error("Please fill all the required inputs!", duration=4000)
+                return
             payload = {
                 "name": self.add_name,
                 "description": self.add_description,
@@ -232,7 +243,9 @@ class ResourceState(rx.State):
         )
         self.add_open = False
         if res.status_code in (200, 201):
-            return await self.fetch_resource()
+            yield rx.toast.success("Resource added successfully")
+            await self.fetch_resource()
+            return
     # ── Edit resource ─────────────────────────────────────
     def open_edit_dialog(self, row: ResourceRow):
         self.edit_id = row["resource_id"]
@@ -323,7 +336,11 @@ def filter_button(label: str, value: str) -> rx.Component:
 
 def add_form_fields() -> rx.Component:
     return rx.flex(
-        rx.text("Name", color="white", font_weight="bold"),
+        rx.flex(
+            rx.text("Name", color="white", font_weight="bold"),
+            rx.text("*", color="red", margin_left="0.2em"),
+            align="center",
+        ),
         rx.input(
             value=ResourceState.add_name,
             on_change=ResourceState.set_add_name,
@@ -341,26 +358,42 @@ def add_form_fields() -> rx.Component:
         rx.cond(
             ResourceState.add_type == "coworking_space",
             rx.flex(
-                rx.text("Description", color="white", font_weight="bold"),
+                rx.flex(
+                    rx.text("Description", color="white", font_weight="bold"),
+                    rx.text("*", color="red", margin_left="0.2em"),
+                    align="center",
+                ),
                 rx.text_area(
                     value=ResourceState.add_description,
                     on_change=ResourceState.set_add_description,
                     placeholder="Description",
                 ),
-                rx.text("Room No.", color="white", font_weight="bold"),
+                rx.flex(
+                    rx.text("Room No.", color="white", font_weight="bold"),
+                    rx.text("*", color="red", margin_left="0.2em"),
+                    align="center",
+                ),
                 rx.input(
                     value=ResourceState.add_room_no,
                     on_change=ResourceState.set_add_room_no,
                     placeholder="e.g. 101",
                 ),
-                rx.text("Capacity", color="white", font_weight="bold"),
+                rx.flex(
+                    rx.text("Capacity", color="white", font_weight="bold"),
+                    rx.text("*", color="red", margin_left="0.2em"),
+                    align="center",
+                ),
                 rx.input(
                     value=ResourceState.add_capacity,
                     on_change=ResourceState.set_add_capacity,
                     placeholder="0",
                     type="number",
                 ),
-                rx.text("Min Guests", color="white", font_weight="bold"),
+                rx.flex(
+                    rx.text("Minimum Number of guests", color="white", font_weight="bold"),
+                    rx.text("*", color="red", margin_left="0.2em"),
+                    align="center",
+                ),
                 rx.input(
                     value=ResourceState.add_min_guests,
                     on_change=ResourceState.set_add_min_guests,
@@ -378,13 +411,21 @@ def add_form_fields() -> rx.Component:
         rx.cond(
             ResourceState.add_type == "locker",
             rx.flex(
-                rx.text("Description", color="white", font_weight="bold"),
+                rx.flex(
+                    rx.text("Description", color="white", font_weight="bold"),
+                    rx.text("*", color="red", margin_left="0.2em"),
+                    align="center",
+                ),
                 rx.text_area(
                     value=ResourceState.add_description,
                     on_change=ResourceState.set_add_description,
                     placeholder="Description",
                 ),
-                rx.text("Locker No.", color="white", font_weight="bold"),
+                rx.flex(
+                    rx.text("Locker No.", color="white", font_weight="bold"),
+                    rx.text("*", color="red", margin_left="0.2em"),
+                    align="center",
+                ),
                 rx.input(
                     value=ResourceState.add_locker_no,
                     on_change=ResourceState.set_add_locker_no,
@@ -401,13 +442,21 @@ def add_form_fields() -> rx.Component:
         rx.cond(
             ResourceState.add_type == "equipment",
             rx.flex(
-                rx.text("Description", color="white", font_weight="bold"),
+                rx.flex(
+                    rx.text("Description", color="white", font_weight="bold"),
+                    rx.text("*", color="red", margin_left="0.2em"),
+                    align="center",
+                ),
                 rx.text_area(
                     value=ResourceState.add_description,
                     on_change=ResourceState.set_add_description,
                     placeholder="Description",
                 ),
-                rx.text("Serial No.", color="white", font_weight="bold"),
+                rx.flex(
+                    rx.text("Serial No.", color="white", font_weight="bold"),
+                    rx.text("*", color="red", margin_left="0.2em"),
+                    align="center",
+                ),
                 rx.input(
                     value=ResourceState.add_serial_no,
                     on_change=ResourceState.set_add_serial_no,
