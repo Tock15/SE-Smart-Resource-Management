@@ -156,7 +156,7 @@ class BookingService:
             return False
         now = datetime.now()
         booking_start = booking.timeslot.start_time
-        booking.status = BookingStatus.CANCELLED
+        
         if booking_start - now < timedelta(minutes=30):
             raise HTTPException(
                 status_code=400, 
@@ -167,6 +167,6 @@ class BookingService:
                 status_code=400, 
                 detail="Only pending or approved bookings can be cancelled."
             )
-        
+        booking.status = BookingStatus.CANCELLED
         db.commit()
         return True
