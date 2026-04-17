@@ -65,8 +65,12 @@ class LoginState(rx.State):
             )
     def getToken(self):
         return {"token":self.token,"token_type":self.token_type}
-    
 
+    def initilize(self):
+        self.username = ""
+        self.password = ""
+    
+# @rx.page(route="/login", on_load=LoginState.initilize)
 def login_page() -> rx.Component:
     return rx.center(
     rx.box(
