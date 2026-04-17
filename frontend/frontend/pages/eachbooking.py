@@ -183,6 +183,7 @@ class BookingState(rx.State):
             "serial_no": data.get("serial_no", ""),
             "locker_no": data.get("locker_no", ""),
             "bookings": data.get("bookings", []),
+            "image_url": data.get("image_url", ""),
         }
 
     @rx.var
@@ -687,7 +688,11 @@ def booking_page() -> rx.Component:
                         rx.divider(),
                         rx.hstack(
                             rx.image(
-                                src="/pic/room1.jpg",
+                                src=rx.cond(
+                                BookingState.resource["image_url"],
+                                f"http://localhost:8000{BookingState.resource['image_url']}",
+                                "/pic/room1.jpg"
+                            ),
                                 width="80px",
                                 height="80px",
                                 object_fit="cover",
@@ -764,6 +769,7 @@ def booking_page() -> rx.Component:
                         spacing="5",
                         width="100%",
                         max_width="400px",
+                        align_self="flex-start", 
                     ),
 
                     # Right column — date + times
@@ -793,7 +799,6 @@ def booking_page() -> rx.Component:
                             align="start",
                             width="100%",
                             spacing="2",
-                            margin_top="20px",
                         ),
 
                         # Time slot selector
@@ -809,6 +814,7 @@ def booking_page() -> rx.Component:
                                 columns="2",
                                 spacing="2",
                                 width="100%",
+                                align_items="start"
                             ),
                             align="start",
                             width="100%",
@@ -902,14 +908,19 @@ def booking_page() -> rx.Component:
 
                         align="start",
                         spacing="5",
-                        width="100%",
+                        width="400px",
                         max_width="350px",
+                        align_self="flex-start", 
                     ),
 
-                    align="start",
-                    spacing="9",
-                    width="100%",
+                    align="center",
+                    gap="120px",
                     justify="center",
+                    bg="white",
+                    box_shadow="0 4px 12px rgba(0, 0, 0, 0.1)",
+                    border_radius="12px",
+                    padding="80px",
+                    width="fit-content",
                 ),
 
                 # ── Fallback for other resource types ───────────────────────
@@ -922,10 +933,13 @@ def booking_page() -> rx.Component:
                         color="gray",
                         font_size="14px",
                     ),
-                    rx.divider(),
                     rx.hstack(
                         rx.image(
-                            src="/pic/room1.jpg",
+                            src=rx.cond(
+                                BookingState.resource['image_url'],
+                                f"http://localhost:8000{BookingState.resource['image_url']}",
+                                "/pic/room1.jpg"
+                            ),
                             width="80px",
                             height="80px",
                             object_fit="cover",
@@ -950,7 +964,7 @@ def booking_page() -> rx.Component:
                             rx.cond(
                                 BookingState.resource["type"] == "equipment",
                                 rx.text(
-                                    "Usage hours: 08:00 AM – 06:00 PM.",
+                                    "Available for checkout",
                                     font_size="13px",
                                     color="gray",
                                 ),
@@ -1038,14 +1052,20 @@ def booking_page() -> rx.Component:
                         ),
                     ),
                     align="start",
-                    spacing="5",
+                    spacing="4",
                     width="100%",
                     max_width="400px",
+                    align_self="flex-start",
                 ),
 
                 # Right column — calendar + confirm
                 rx.vstack(
-                    calendar_page(),
+                    rx.box(
+                        calendar_page(),
+                        width="100%",        # ← fixed width to match calendar
+                        overflow="hidden",    # ← clip anything wider
+                        flex_shrink="0",
+                    ),
                     rx.button(
                         "Confirm Booking",
                         on_click=BookingState.submit_booking,
@@ -1063,21 +1083,32 @@ def booking_page() -> rx.Component:
                     spacing="5",
                     width="100%",
                     max_width="300px",
-                    margin_top="70px",
+                    min_width="0",
+                    align_self="flex-start",
+                    overflow="hidden",
+                    flex_shrink="1",
                 ),
 
                 align="start",
-                spacing="9",
-                width="100%",
+                gap="120px",
                 justify="center",
+                bg="white",
+                box_shadow="0 4px 12px rgba(0, 0, 0, 0.1)",
+                border_radius="12px",
+                padding="60px",
+                width="1000px",
+                overflow="hidden",  # ← add this
+                height="575px",
+                margin_top="40px",
             ),
         ),
-        justify="center", 
-        align="center",    
-        height="100vh",     
+        display="flex",
+        justify_content="center",
+        align_items="flex-start",
+        min_height="calc(100vh - 90px)",
         width="100%",
-        padding="80px",
-        bg="white",
+        padding="16px",
+        bg="gray",
     ),
     margin="0",
     padding="0",

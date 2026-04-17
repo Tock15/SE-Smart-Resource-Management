@@ -70,24 +70,6 @@ def sidebar() -> rx.Component:
                     on_click=rx.redirect("/")
                 ),
                 rx.divider(),
-                rx.flex(
-                    rx.image(
-                        src="/sidebar_user.png",
-                        width="10%",
-                        height="10%"
-                    ),
-                    rx.text(
-                        "Account",
-                        color="black",
-                        font_size="1.3em"
-                    ),
-                    width="100%",
-                    spacing="3",
-                    align="center",
-                    cursor="pointer",
-                    on_click=rx.redirect("/account")
-                ),
-                rx.divider(),
                 rx.cond(
                     State.role == "admin",
                     rx.flex(

@@ -135,20 +135,21 @@ def register_page() -> rx.Component:
                             width="100%",
                             text_align="center",
                             margin_bottom="20px",
+                            color="#1E88E5",
                         ),  
-                        rx.text("Student_ID",margin="5px 0 5px 20px",font_size="15px"),
-                        rx.input(value=RegisterState.student_id,on_change=RegisterState.set_student_id,placeholder="Username", width="400px",bg="white",margin_bottom="5px",height="45px",border_radius="40px",padding_left="20px",color="black",font_size="17px"),
+                        rx.text("Student_ID",color="#1E88E5",margin="5px 0 5px 20px",font_size="15px"),
+                        rx.input(box_shadow="10px 0 40px rgba(0, 0, 0, 0.17)",value=RegisterState.student_id,on_change=RegisterState.set_student_id,placeholder="Username", width="400px",bg="white",margin_bottom="5px",height="45px",border_radius="40px",padding_left="20px",color="black",font_size="17px"),
 
-                        rx.text("Username",margin="5px 0 5px 20px",font_size="15px"),
-                        rx.input(value=RegisterState.username,on_change=RegisterState.set_username,placeholder="Username", width="400px",bg="white",margin_bottom="5px",height="45px",border_radius="40px",padding_left="20px",color="black",font_size="17px"),
+                        rx.text("Username",color="#1E88E5",margin="5px 0 5px 20px",font_size="15px"),
+                        rx.input(box_shadow="10px 0 40px rgba(0, 0, 0, 0.17)",value=RegisterState.username,on_change=RegisterState.set_username,placeholder="Username", width="400px",bg="white",margin_bottom="5px",height="45px",border_radius="40px",padding_left="20px",color="black",font_size="17px"),
 
-                        rx.text("Email",margin="5px 0 5px 20px",font_size="15px"),
-                        rx.input(value=RegisterState.email,on_change=RegisterState.set_email,placeholder="Email", width="400px",bg="white",margin_bottom="5px",height="45px",border_radius="40px",padding_left="20px",color="black",font_size="17px"),
+                        rx.text("Email",color="#1E88E5",margin="5px 0 5px 20px",font_size="15px"),
+                        rx.input(box_shadow="10px 0 40px rgba(0, 0, 0, 0.17)",value=RegisterState.email,on_change=RegisterState.set_email,placeholder="Email", width="400px",bg="white",margin_bottom="5px",height="45px",border_radius="40px",padding_left="20px",color="black",font_size="17px"),
                         
-                        rx.text("Password",margin="5px 0 5px 20px",font_size="15px"),
-                        rx.input(type="password",value=RegisterState.password,on_change=RegisterState.set_password,placeholder="Password", width="400px",bg="white",margin_bottom="5px",height="45px",border_radius="40px",padding_left="20px",color="black",font_size="17px"),
+                        rx.text("Password",color="#1E88E5",margin="5px 0 5px 20px",font_size="15px"),
+                        rx.input(box_shadow="10px 0 40px rgba(0, 0, 0, 0.17)",type="password",value=RegisterState.password,on_change=RegisterState.set_password,placeholder="Password", width="400px",bg="white",margin_bottom="5px",height="45px",border_radius="40px",padding_left="20px",color="black",font_size="17px"),
 
-                        rx.text("Confirm password",margin="5px 0 5px 20px",font_size="15px"),
+                        rx.text("Confirm password",color="#1E88E5",margin="5px 0 5px 20px",font_size="15px"),
                         rx.input(type="password",placeholder="Confirm Password", width="400px",bg="white",margin_bottom="25px",height="45px",border_radius="45px",padding_left="20px",color="black",font_size="17px"),
 
                         rx.radio_group(
@@ -157,6 +158,7 @@ def register_page() -> rx.Component:
                             margin_bottom="40px",
                             value=RegisterState.role,
                             on_change=RegisterState.set_role,
+                            color="#1E88E5",
                         ),
                         
                         rx.button(
@@ -196,7 +198,7 @@ def register_page() -> rx.Component:
         height="675px",
         padding="20px",
         border_radius="60px",
-        bg="linear-gradient(to top, #B8D4F7, #96C4F6, #7FB6F5)",
+        bg="linear-gradient(to bottom, #FFFFFF, #E8F3FD, #B8D4F7)",
         box_shadow="0 20px 60px rgba(0, 0, 0, 0.2)",
     ),
     height="100vh",
