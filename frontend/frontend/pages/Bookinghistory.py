@@ -27,6 +27,8 @@ class Booking(rx.Base):
 class MyState(rx.State):
     data: list[Booking] = []
     search_query: str = ""
+    current_page: int = 1
+    rows_per_page: int = 10
 
     async def get_data(self):
         dashboard_state = await self.get_state(State)
@@ -44,6 +46,9 @@ class MyState(rx.State):
                     resource=Resource(**item["resource"]),
                     timeslot=Timeslot(**item["timeslot"]),
                     display_time=format_date_python(
+                        item["timeslot"]["start_time"],
+                        item["timeslot"]["end_time"]
+                    ) if item["resource"]["type"] == "coworking_space" else format_date_only(
                         item["timeslot"]["start_time"],
                         item["timeslot"]["end_time"]
                     ),
@@ -78,18 +83,38 @@ class MyState(rx.State):
                 )
 
 
+    def next_page(self):
+        if self.current_page < self.total_pages:
+            self.current_page += 1
+
+    def prev_page(self):
+        if self.current_page > 1:
+            self.current_page -= 1
+
+    def go_to_page(self, page: int):
+        self.current_page = page
+
     def set_search(self, value: str):
         self.search_query = value
+        self.current_page = 1  # reset to page 1 on new search
 
     @rx.var
     def filtered_data(self) -> list[Booking]:
         if not self.search_query:
             return self.data
         return [
-            item
-            for item in self.data
+            item for item in self.data
             if self.search_query.lower() in item.resource.name.lower()
         ]
+
+    @rx.var
+    def total_pages(self) -> int:
+        return max(1, (len(self.filtered_data) + self.rows_per_page - 1) // self.rows_per_page)
+
+    @rx.var
+    def current_page_data(self) -> list[Booking]:
+        start = (self.current_page - 1) * self.rows_per_page
+        return self.filtered_data[start: start + self.rows_per_page]
 
     async def authorization(self):
         dashboard_state = await self.get_state(State)
@@ -99,7 +124,17 @@ class MyState(rx.State):
             dashboard_state.set_error_msg("you need to login before accessing this page")
             return rx.redirect("/login")
 
-
+def format_date_only(start: str, end : str) -> str:
+    month_names = {
+        "1": "January", "2": "February", "3": "March", "4": "April",
+        "5": "May", "6": "June", "7": "July", "8": "August",
+        "9": "September", "10": "October", "11": "November", "12": "December"
+    }
+    start_date = start.split("T")[0]
+    end_date = end.split("T")[0]
+    start_year, start_month, start_day = start_date.split("-")
+    end_year, end_month, end_day = end_date.split("-")
+    return f"{int(start_day)} {month_names[start_month.lstrip('0')]} {start_year} - {int(end_day)} {month_names[end_month.lstrip('0')]} {end_year}"
 def format_date_python(start: str, end: str) -> str:
     month_names = {
         "1": "January", "2": "February", "3": "March", "4": "April",
@@ -283,13 +318,14 @@ def orders_page() -> rx.Component:
                             rx.table.column_header_cell("Time"),
                             rx.table.column_header_cell("Status"),
                             rx.table.column_header_cell("Action"),
-                            bg="#1E88E5",
-                            color="white",
+                            color="black",
+                            border_bottom="1px solid #f0f0f0",
                         ),
+                        
                     ),
                     rx.table.body(
                         rx.foreach(
-                            MyState.filtered_data,
+                            MyState.current_page_data,
                             booking_row,
                         )
                     ),
@@ -301,11 +337,34 @@ def orders_page() -> rx.Component:
                 rx.hstack(
                     rx.spacer(),
                     rx.spacer(),
+                    # Replace the old pagination hstack with this:
                     rx.hstack(
-                        rx.button("‹", variant="outline", size="2"),
-                        rx.button("1", bg="#1E88E5", color="white", size="2"),
-                        rx.button("›", variant="outline", size="2"),
-                        spacing="1",
+                        rx.icon_button(
+                            rx.icon("chevron-left"),
+                            on_click=MyState.prev_page,
+                            disabled=MyState.current_page <= 1,
+                            variant="outline",
+                            size="2",
+                        ),
+                        rx.text(
+                            "Page ",
+                            rx.text.strong(MyState.current_page),
+                            " of ",
+                            rx.text.strong(MyState.total_pages),
+                            color="gray",
+                            font_size="0.9em",
+                        ),
+                        rx.icon_button(
+                            rx.icon("chevron-right"),
+                            on_click=MyState.next_page,
+                            disabled=MyState.current_page >= MyState.total_pages,
+                            variant="outline",
+                            size="2",
+                        ),
+                        spacing="3",
+                        align="center",
+                        justify="center",
+                        width="100%",
                     ),
                     width="100%",
                     align="center",
