@@ -149,7 +149,6 @@ def eq_card(item: dict) -> rx.Component:
                     rx.heading(item["name"], size="7",color="black"),
                     rx.hstack(
                         rx.badge("Room ", item["type"], color_scheme="blue"),
-                        rx.badge(item["locker_no"], color_scheme="cyan"),
                     ),
                     rx.text(
                         item["description"],

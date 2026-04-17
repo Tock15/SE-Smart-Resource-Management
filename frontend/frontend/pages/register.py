@@ -188,7 +188,7 @@ def register_page() -> rx.Component:
         height="675px",
         padding="20px",
         border_radius="60px",
-        bg="linear-gradient(to top,#C8DDF7, #ADD2F7, #7FB6F5)",
+        bg="linear-gradient(to top, #B8D4F7, #96C4F6, #7FB6F5)",
         box_shadow="0 20px 60px rgba(0, 0, 0, 0.2)",
     ),
     height="100vh",

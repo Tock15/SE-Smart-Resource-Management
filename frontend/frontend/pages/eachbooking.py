@@ -447,31 +447,61 @@ class BookingState(rx.State):
             dashboard_state.set_error_msg("You need to login before access this page")
             yield rx.redirect("/login")
 
-
-def navbar() -> rx.Component:
+def change_resource_name(resource) -> rx.Component:
+    return rx.cond(
+        resource == "coworking_space",
+        "rooms",
+        rx.cond(
+            resource == "locker",
+            "locker",
+            rx.cond(
+                resource == "equipment",
+                "equipment",
+                "resource"
+            )
+        )
+    )
+def navbar(resource_type) -> rx.Component:
     return rx.box(
         # Sidebar
         sidebar(),
         # Navbar
         rx.flex(
-            rx.image(
-                src="/whitesidebar.png",
-                width="28px",
-                height="28px",
-                cursor="pointer",
-                on_click=SidebarState.open_sidebar,
+            # Left side: icon + title
+            rx.hstack(
+                rx.image(
+                    src="/whitesidebar.png",
+                    width="28px",
+                    height="28px",
+                    cursor="pointer",
+                    on_click=SidebarState.open_sidebar,
+                ),
+                rx.text(
+                    "SERSM",
+                    color="white",
+                    font_weight="bold",
+                    font_size="1.5em",
+                ),
+                align="center",
+                spacing="2",
             ),
-            rx.text(
-                "SERSM",
-                color="white",
-                font_weight="bold",
-                font_size="1.5em",
+            # Spacer to push Back link to the right
+            rx.spacer(),
+            # Right side: Back link
+            rx.link(
+                rx.hstack(
+                    rx.text("Back", color="white", font_weight="bold", font_size="1.5em"),
+                    rx.icon("arrow-right", color="white", font_size="1.5em"),
+                    align="center",
+                    spacing="1",
+                ),
+                href="/resource/" + change_resource_name(resource_type),
             ),
             align="center",
-            spacing="4",
+            width="100%",
         ),
         bg="#1E88E5",
-        height="60px",
+        height="90px",
         width="100%",
         display="flex",
         align_items="center",
@@ -636,7 +666,7 @@ def booking_page() -> rx.Component:
     ]
 
     return rx.box(
-        navbar(),
+        navbar(resource_type=BookingState.resource.get("type", "")),
         rx.toast.provider(position="bottom-right"),
         rx.box(
             rx.cond(
@@ -881,54 +911,139 @@ def booking_page() -> rx.Component:
                 ),
 
                 # ── Fallback for other resource types ───────────────────────
+                rx.hstack(
+                # Left column — resource info
                 rx.vstack(
                     rx.heading("Book a Resource", size="7", color="black"),
                     rx.text(
-                        "Fill in the details to reserve your resource.",
+                        "Select Date Range to reserve your resource.",
                         color="gray",
                         font_size="14px",
                     ),
                     rx.divider(),
-
-            # Date range picker
-            rx.vstack(
-                rx.text(
-                    "Select Date Range",
-                    font_size="13px",
-                    font_weight="bold",
-                    color="gray",
-                ),
-                rx.hstack(
-                    calendar_page(),
-                    ),
-                    align="center",
-            ),
-                rx.cond(
-                    BookingState.start_date & BookingState.end_date,
-                    rx.box(
-                        rx.hstack(
-                            rx.icon("calendar", size=14, color="#1E88E5"),
+                    rx.hstack(
+                        rx.image(
+                            src="/pic/room1.jpg",
+                            width="80px",
+                            height="80px",
+                            object_fit="cover",
+                            border_radius="10px",
+                        ),
+                        rx.vstack(
                             rx.text(
                                 BookingState.resource["name"],
                                 font_weight="bold",
                                 font_size="16px",
                                 color="black",
                             ),
-                            rx.text(
-                                BookingState.resource["type"],
-                                font_size="13px",
-                                color="#1E88E5",
+                            rx.hstack(
+                                rx.text(
+                                    BookingState.resource["room_no"],
+                                    font_size="13px",
+                                    color="#1E88E5",
+                                ),
+                                align="center",
+                                spacing="1",
+                            ),
+                            rx.cond(
+                                BookingState.resource["type"] == "equipment",
+                                rx.text(
+                                    "Usage hours: 08:00 AM – 06:00 PM.",
+                                    font_size="13px",
+                                    color="gray",
+                                ),
+                                rx.cond(
+                                    BookingState.resource["type"] == "locker",
+                                    rx.text(
+                                        "Locker access: 24/7",
+                                        font_size="13px",
+                                        color="gray",
+                                    ),
+                                    rx.text("") 
+                                ),
                             ),
                             align="start",
                             spacing="1",
                         ),
+                        align="center",
+                        spacing="4",
                         padding="16px",
                         border="1.5px solid #e0e0e0",
                         border_radius="12px",
                         width="100%",
                     ),
+                    rx.cond(
+                        BookingState.resource["type"] == "locker",
+                        rx.box(
+                            rx.vstack(
+                                rx.hstack(
+                                    rx.icon("info", size=13, color="#1E88E5"),
+                                    rx.text(
+                                        "Locker Booking",
+                                        font_size="12px",
+                                        font_weight="700",
+                                        color="#1E88E5",
+                                    ),
+                                    align="center",
+                                    spacing="1",
+                                ),
+                                rx.text(
+                                    "* Locker minimum booking is 1 day. *",
+                                    font_size="12px",
+                                    color="#555",
+                                    line_height="1.5",
+                                ),
+                                align="start",
+                                spacing="1",
+                            ),
+                            bg="#E3F2FD",
+                            border="1px solid #90CAF9",
+                            border_radius="8px",
+                            padding="12px 14px",
+                            width="100%",
+                        ),
+                        rx.cond(
+                            BookingState.resource["type"] == "equipment",
+                            rx.box(
+                                rx.vstack(
+                                    rx.hstack(
+                                        rx.icon("info", size=13, color="#1E88E5"),
+                                        rx.text(
+                                            "Equipment Booking",
+                                            font_size="12px",
+                                            font_weight="700",
+                                            color="#1E88E5",
+                                        ),
+                                        align="center",
+                                        spacing="1",
+                                    ),
+                                    rx.text(
+                                        "* Equipment maximum booking is 3 days. *",
+                                        font_size="12px",
+                                        color="#555",
+                                        line_height="1.5",
+                                    ),
+                                    align="start",
+                                    spacing="1",
+                                ),
+                                bg="#E3F2FD",
+                                border="1px solid #90CAF9",
+                                border_radius="8px",
+                                padding="12px 14px",
+                                width="100%",
+                            ),
+                            rx.fragment(),
+                        ),
+                    ),
+                    align="start",
+                    spacing="5",
+                    width="100%",
+                    max_width="400px",
                 ),
-                    # Confirm button
+
+                # Right column — calendar + confirm
+                rx.vstack(
+                    calendar_page(),
                     rx.button(
                         "Confirm Booking",
                         on_click=BookingState.submit_booking,
@@ -939,22 +1054,29 @@ def booking_page() -> rx.Component:
                         font_size="14px",
                         font_weight="600",
                         width="100%",
-                        max_width="400px",
                         _hover={"bg": "#1565C0"},
                         cursor="pointer",
                     ),
-
-                    align="center",
+                    align="start",
                     spacing="5",
                     width="100%",
-                    max_width="500px",
-                    margin="auto",
+                    max_width="300px",
+                    margin_top="70px",
                 ),
+
+                align="start",
+                spacing="9",
+                width="100%",
+                justify="center",
             ),
-            padding="40px",
-            bg="white",
-            min_height="100vh",
         ),
-        margin="0",
-        padding="0",
-    )
+        justify="center", 
+        align="center",    
+        height="100vh",     
+        width="100%",
+        padding="80px",
+        bg="white",
+    ),
+    margin="0",
+    padding="0",
+)

@@ -390,10 +390,9 @@ def calendar_page() -> rx.Component:
             ),
         ),
         padding="20px",
-        border="1.5px solid #e0e0e0",
         border_radius="16px",
         bg="white",
         width="100%",
-        max_width="320px",
+        max_width="100%",
         box_shadow="0 2px 12px rgba(0,0,0,0.07)",
     )
