@@ -167,7 +167,7 @@ def invited_row(student: dict) -> rx.Component:
             align="start",
         ),
         rx.spacer(),
-        status_badge(student),
+        # status_badge(student),
         rx.icon(
             "x",
             size=15,
