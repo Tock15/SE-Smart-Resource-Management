@@ -172,7 +172,7 @@ def invited_row(student: dict) -> rx.Component:
             "x",
             size=15,
             color="#ccc",
-            cursor="pointer",
+            cursor="pointer", 
             on_click=InviteState.remove_invite(student["id"]),
             _hover={"color": "#ef4444"},
         ),
@@ -192,17 +192,20 @@ def invite_page() -> rx.Component:
             rx.box(
                 rx.vstack(
                     # Header
-                    rx.vstack(
-                        rx.heading("Invite Friends", size="7", color="#111"),
-                        rx.text(
-                            "Invite your friends to join SESRM.",
-                            color="#888",
-                            font_size="14px",
+                    rx.hstack(
+                        rx.vstack(
+                            rx.heading("Invite Friends", size="7", color="#111"),
+                            rx.text(
+                                "Invite your friends to join SESRM.",
+                                color="#888",
+                                font_size="14px",
+                            ),
+                            align="start",
+                            spacing="1",
                         ),
-                        align="start",
-                        spacing="1",
+                        width="100%",
+                        justify="between"
                     ),
-
                     rx.divider(),
 
                     # Input section
