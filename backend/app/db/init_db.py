@@ -137,8 +137,8 @@ def init_db():
             
             # Booking 1: Innovation Hub (Room)
             ts1 = booking.Timeslot(
-                start_time=datetime(2026, 4, 2, 10, 0), 
-                end_time=datetime(2026, 4, 2, 12, 0)
+                start_time=datetime(2026, 4, 19, 10, 0), 
+                end_time=datetime(2026, 4, 19, 12, 0)
             )
             b1 = booking.Booking(
                 user_id=2,
@@ -150,8 +150,8 @@ def init_db():
 
             # Booking 2: Locker (Multi-day)
             ts2 = booking.Timeslot(
-                start_time=datetime(2026, 4, 2, 9, 0), 
-                end_time=datetime(2026, 4, 5, 17, 0)
+                start_time=datetime(2026, 4, 19, 9, 0), 
+                end_time=datetime(2026, 4, 22, 17, 0)
             )
             b2 = booking.Booking(
                 user_id=2,
