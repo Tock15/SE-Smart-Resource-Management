@@ -121,14 +121,6 @@ def login_page() -> rx.Component:
                         rx.text("Password",margin="10px 0 5px 20px",font_size="15px",color="#1E88E5",),
                         rx.input(type="password",box_shadow="10px 0 40px rgba(0, 0, 0, 0.17)",on_change=LoginState.set_password,value=LoginState.password,placeholder="Password", width="400px",bg="white",margin_bottom="10px",height="45px",border_radius="40px",padding_left="20px",color="black",font_size="17px"),
                         
-                        rx.text(
-                            "Forget the password?",
-                            width="100%",        # ← add this
-                            text_align="right",
-                            color="blue",
-                            font_size="15px",
-                            cursor="pointer",
-                        ),
                         rx.button(
                             "Login",
                             width="100%",

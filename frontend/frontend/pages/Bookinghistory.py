@@ -161,7 +161,27 @@ def format_date_python(start: str, end: str) -> str:
     else:
         return f"{to_readable(start_date)} ({start_time}) – {to_readable(end_date)} ({end_time})"
     
-    
+def empty_table_placeholder():
+    return rx.center(
+        rx.flex(
+            rx.icon(
+                "circle-slash", 
+                size=40, 
+                color="gray", 
+                opacity=0.5
+            ),
+            rx.text(
+                "No bookings found. Please book something first", 
+                color="gray", 
+                font_weight="medium"
+            ),
+            spacing="4",
+            padding_y="10",
+            direction="column",
+            align="center"
+        ),
+        width="100%",
+    )
 
 def booking_row(item: Booking) -> rx.Component:
     return rx.table.row(
@@ -333,6 +353,14 @@ def orders_page() -> rx.Component:
                     border="1px solid #e0e0e0",
                     border_radius="10px",
                     overflow="hidden",
+                ),
+                rx.cond(
+                    MyState.filtered_data.length() == 0,
+                    rx.center(
+                        empty_table_placeholder(),
+                        width="100%",
+                        padding="40px",
+                    ),
                 ),
                 rx.hstack(
                     rx.spacer(),

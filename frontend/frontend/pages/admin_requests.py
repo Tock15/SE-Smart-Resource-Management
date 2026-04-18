@@ -23,6 +23,27 @@ STATUS_COLORS = {
     "cancelled": "gray",
     "overridden": "purple"
 }
+def empty_table_placeholder():
+    return rx.center(
+        rx.flex(
+            rx.icon(
+                "circle-slash", 
+                size=40, 
+                color="gray", 
+                opacity=0.5
+            ),
+            rx.text(
+                "No Requests found", 
+                color="gray", 
+                font_weight="medium"
+            ),
+            spacing="4",
+            padding_y="10",
+            direction="column",
+            align="center"
+        ),
+        width="100%",
+    )
 
 
 class RequestsDashboardState(rx.State):
@@ -364,6 +385,14 @@ def admin_dashboard() -> rx.Component:
                     margin_left="20px",
                     margin_right="20px",
                     border_radius="10px"
+                ),
+                rx.cond(
+                    RequestsDashboardState.filtered_data.length() == 0,
+                    rx.center(
+                        empty_table_placeholder(),
+                        width="100%",
+                        padding="40px",
+                    ),
                 ),
                 # Pagination
                 rx.flex(
